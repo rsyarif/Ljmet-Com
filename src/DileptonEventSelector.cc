@@ -296,7 +296,8 @@ void DileptonEventSelector::BeginJob( std::map<std::string, edm::ParameterSet co
 
 
 bool DileptonEventSelector::operator()( edm::EventBase const & event, pat::strbitset & ret){
-    
+
+    if(!mbPar["isMc"]) BaseEventSelector::JECbyIOV(event);    
     pat::strbitset retJet       = jetSel_->getBitTemplate();
 
     //packed pf candidates and rho source needed miniIso
@@ -763,7 +764,7 @@ bool DileptonEventSelector::operator()( edm::EventBase const & event, pat::strbi
 		  else if(ooEmooP >= 0.102) {passLoose= false; }
 		  else if(fabs(d0) >= 0.0261)      {passLoose= false; }
 		  else if(fabs(dZ) >= 0.41)     {passLoose= false; }
-		  else if(_iel->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS) > 2)              {passLoose= false; }
+		  else if(_iel->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS) > 2)              {passLoose= false; }
 		  else if(_iel->isGsfCtfScPixChargeConsistent() < 1)  {passLoose= false; }
 		  else if(!_iel->passConversionVeto())        {passLoose= false; }
 		  else passLoose=true;
@@ -779,7 +780,7 @@ bool DileptonEventSelector::operator()( edm::EventBase const & event, pat::strbi
 		  else if(ooEmooP >= 0.126) {passLoose= false; }
 		  else if(fabs(d0) >= 0.118)       {passLoose= false; }
 		  else if(fabs(dZ) >= 0.822)      {passLoose= false; }
-		  else if(_iel->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS) > 1)              {passLoose= false; }
+		  else if(_iel->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS) > 1)              {passLoose= false; }
 		  else if(_iel->isGsfCtfScPixChargeConsistent() < 1)  {passLoose= false; }
 		  else if(!_iel->passConversionVeto())        {passLoose= false; }
 		  else passLoose=true;
