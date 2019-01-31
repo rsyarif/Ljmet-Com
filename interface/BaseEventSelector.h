@@ -171,8 +171,10 @@ public:
     
     bool isJetTagged(const pat::Jet &jet, edm::EventBase const & event, bool applySF = true, int shiftflag = 0, bool subjetflag = false);
     TLorentzVector correctJetForMet(const pat::Jet & jet, edm::EventBase const & event, unsigned int syst = 0);
-    TLorentzVector correctJet(const pat::Jet & jet, edm::EventBase const & event, bool doAK8Corr = false, bool forceCorr = false, unsigned int syst = 0);
-    pat::Jet correctJetReturnPatJet(const pat::Jet & jet, edm::EventBase const & event, bool doAK8Corr = false, bool forceCorr = false, unsigned int syst = 0);
+    TLorentzVector correctJet(const pat::Jet & jet, edm::EventBase const & event, bool doAK8Corr = false, bool forceCorr = false, unsigned int syst = 0,int run=0, bool doEraDepJEC = false);
+    TLorentzVector smearJet(const pat::Jet & jet, edm::EventBase const & event, bool up=true,bool doAK8=false);
+    TLorentzVector scaleJet(const pat::Jet & jet, bool up=true);
+    pat::Jet correctJetReturnPatJet(const pat::Jet & jet, edm::EventBase const & event, bool doAK8Corr = false, bool forceCorr = false, unsigned int syst = 0,int run=0, bool doEraDepJEC = false);
     TLorentzVector correctMet(const pat::MET & met, edm::EventBase const & event, unsigned int syst = 0, bool useHF = true);
     TLorentzVector correctMet(const pat::MET & met, edm::EventBase const & event, std::vector<pat::Jet> jets, unsigned int syst = 0, bool useHF = true);
     TLorentzVector correctMet(const pat::MET & met, edm::EventBase const & event, std::vector<edm::Ptr<pat::Jet> > jets, unsigned int syst = 0, bool useHF = true);
@@ -267,6 +269,7 @@ private:
     JetCorrectorParameters *ResJetParAK8; 
     FactorizedJetCorrector *JetCorrector;
     FactorizedJetCorrector *JetCorrectorAK8;
+    //run era dependent jec
     JetCorrectorParameters *ResJetPar_B; 
     JetCorrectorParameters *ResJetParAK8_B; 
     FactorizedJetCorrector *JetCorrector_B;
@@ -283,6 +286,7 @@ private:
     JetCorrectorParameters *ResJetParAK8_F; 
     FactorizedJetCorrector *JetCorrector_F;
     FactorizedJetCorrector *JetCorrectorAK8_F;
+
     LjmetEventContent * mpEc;
     MVAElectronVars allMVAVars;
     TMVA::Reader tmpTMVAReader_EB;
