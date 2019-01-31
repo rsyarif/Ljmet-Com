@@ -28,6 +28,7 @@
 #include "Math/GenVector/Cartesian2D.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 #include "PhysicsTools/SelectorUtils/interface/strbitset.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 //===============================================================>
 //
@@ -131,9 +132,7 @@ int main (int argc, char* argv[]) {
     TFileDirectory theDir = fs.mkdir( "histos" );
     std::cout << legend << "booking histograms" << std::endl;
     std::map<std::string, TH1*> hists;
-    hists["nevents"] = theDir.make<TH1I>( "nevents",
-                                         "nevents",
-                                         1, 0, 2 ) ;
+    hists["nevents"] = theDir.make<TH1I>( "nevents", "nevents", 4, -2, 2 ) ;
     // hists["nInteractions"] = theDir.make<TH1D>( "hist_nInteractions",
     //					 "nInteractions",
     //					 400, 0, 400 ) ;
@@ -276,7 +275,15 @@ int main (int argc, char* argv[]) {
         edm::EventBase const & event = ev;
         
         // count event before any selection
-        hists["nevents"]->Fill(1);
+	int theWeight = 1;
+	if(isMc){
+	  edm::Handle<GenEventInfoProduct> genEvtInfo;
+	  edm::InputTag gen_it("generator");
+	  event.getByLabel(gen_it, genEvtInfo );
+
+	  theWeight = genEvtInfo->weight()/fabs(genEvtInfo->weight());
+	}
+        hists["nevents"]->Fill(theWeight);
         
         // progress printout
         if ( nev % 100 == 0 ) std::cout << legend << nev << " events processed. Processing run " << event.id().run() << ", event " << event.id().event() << std::endl;
