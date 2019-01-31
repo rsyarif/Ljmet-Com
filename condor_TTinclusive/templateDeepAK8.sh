@@ -19,11 +19,11 @@ uname -n
 export SCRAM_ARCH=slc6_amd64_gcc630
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 
-echo "running scramv1 project CMSSW CMSSW_9_4_6_patch1"
-eval `scramv1 project CMSSW CMSSW_9_4_6_patch1`
+echo "running scramv1 project CMSSW CMSSW_9_4_12"
+eval `scramv1 project CMSSW CMSSW_9_4_12`
 
-echo "cd to CMSSW_9_4_6_patch1"
-cd CMSSW_9_4_6_patch1
+echo "cd to CMSSW_9_4_12"
+cd CMSSW_9_4_12
 pwd
 
 echo "coping in tarball"
@@ -52,7 +52,7 @@ ldd cmsRun
 cd -
 
 echo "Running deepAK8 producer"
-cmsRun produceDeepAK8_${PREFIX}_${JOBID}.py
+cmsRun producer_${PREFIX}_${JOBID}.py
 
 echo "Sleeping for one minute..."
 sleep 60
