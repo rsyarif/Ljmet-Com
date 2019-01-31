@@ -620,7 +620,7 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
 	elMHits.push_back((*iel)->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS));
 	elVtxFitConv.push_back((*iel)->passConversionVeto());
         //add mva
-	elMVA.push_back( selector->mvaValue( *(iel->get()), event) );
+	elMVA.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV1Values"));
 
 	//add miniIso
 	elMiniIsoEA.push_back(getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate *>(iel->get()),0.05, 0.2, 10., false, false,myRhoJetsNC));
@@ -677,21 +677,12 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
 	  }
 	*/
         if (UseElMVA) {
-            elMVAValue.push_back( selector->mvaValue(iel->operator*(),event) );
+	  // bare minimum! See singleLepCalc for more IDs and usingV2
+	  elMVAValue.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV1Values"));
 	  bool mvapass = 0;
 	  bool mvapassloose = 0;
-	  if ( fabs((*iel)->superCluster()->eta())<=0.8){
-	    mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(0) - tightElMVA.at(2)*exp(-1*(*iel)->pt()/tightElMVA.at(1)));
-	    mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(0);
-	  }
-	  else if ( fabs((*iel)->superCluster()->eta())<=1.479){
-	    mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(3) - tightElMVA.at(5)*exp(-1*(*iel)->pt()/tightElMVA.at(4)));
-	    mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(1);
-	  }
-	  else{
-	    mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(6) - tightElMVA.at(8)*exp(-1*(*iel)->pt()/tightElMVA.at(7)));
-	    mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(2);
-	  }
+	  mvapass = (*iel)->electronID("mvaEleID-Fall17-noIso-V1-wp90");
+	  mvapassloose = (*iel)->electronID("mvaEleID-Fall17-noIso-V1-wpLoose");
 	  elIsMVATight.push_back(mvapass);
 	  elIsMVALoose.push_back(mvapassloose);
         }
