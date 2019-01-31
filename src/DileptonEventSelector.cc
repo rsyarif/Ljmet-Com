@@ -741,16 +741,7 @@ passCut(ret,"Bad Charged Hadron");
 	      
 
 	      if(_iel->pt() > 10) {
-	     	float mvaVal = mvaValue( *_iel,event);
-		if(fabs(_iel->ecalDrivenMomentum().eta()) <0.8){
-		  if(mvaVal>-0.86) passLoose = true;
-		}
-		else if(fabs(_iel->ecalDrivenMomentum().eta()) < 1.479){
-		  if(mvaVal>-0.81) passLoose = true;
-		}
-		else if(fabs(_iel->ecalDrivenMomentum().eta())<2.4){
-		  if(mvaVal > -0.72) passLoose=true;
-		}
+		passLoose = _iel->electronID("mvaEleID-Fall17-noIso-V1-wpLoose");
 		if (miniIso > 0.4) passLoose = false;
 	      }
 /*

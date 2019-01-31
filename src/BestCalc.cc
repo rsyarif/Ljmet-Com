@@ -291,7 +291,13 @@ int BestCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector * sel
       {"thrustH",        -999}
     };
 
+    std::vector<std::string> labels = ii->subjetCollectionNames();
+    if(labels.size() == 0) std::cout << "there are no subjet collection labels" << std::endl;
+    // for (unsigned int j = 0; j < labels.size(); j++){
+    //   std::cout << labels.at(j) << std::endl;
+    // }
     auto const& thisSubjets   = ii->subjets("SoftDropPuppi");
+
     unsigned int numDaughters = ii->numberOfDaughters();
     float softdropmass = ii->userFloat("ak8PFJetsPuppiSoftDropMass");
     int largest = 10;

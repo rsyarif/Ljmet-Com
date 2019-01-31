@@ -5,8 +5,8 @@ BestCalc = cms.PSet(
     dnnFile = cms.string(''),
 
     numSubjetsMin = cms.int32(2),
-    numDaughtersMin = cms.int32(2),
-    jetSoftDropMassMin = cms.double(5.0),
+    numDaughtersMin = cms.int32(3),
+    jetSoftDropMassMin = cms.double(10.0),
     jetPtMin = cms.double(170.0),
     radiusSmall = cms.double(0.4),
     radiusLarge = cms.double(0.8),

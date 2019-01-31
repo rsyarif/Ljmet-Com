@@ -14,7 +14,7 @@ files_per_job = 2
 #Configuration options parsed from arguments
 #Switching to getopt for compatibility with older python
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["useMC=", "sample=","fileList=", "outDir=","shift=","submit=","json=","inputTar=","saveGenHT=","accessor="])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["useMC=", "sample=","fileList=", "outDir=","shift=","submit=","json=","inputTar=","saveGenHT=","newpdf=","isTTbar=","accessor="])
 except getopt.GetoptError as err:
     print str(err)
     sys.exit(1)
@@ -29,6 +29,8 @@ submit   = bool(False)
 changeJEC= bool(False)
 tarfile  = str('None')
 saveGHT  = str('False')
+newpdf   = str('False')
+isTTbar  = str('False')
 accessor = str('None')
 
 for o, a in opts:
@@ -47,6 +49,8 @@ for o, a in opts:
     elif o == "--inputTar": tarfile = str(a).split('.')[0]
     elif o == "--json":     json   = str(a)
     elif o == "--saveGenHT": saveGHT = str(a)
+    elif o == "--newpdf": newpdf = str(a)
+    elif o == "--isTTbar": isTTbar = str(a)
     elif o == "--accessor": accessor = str(a)
     elif o == "--submit":
         if a == 'True':     submit = True
@@ -156,11 +160,12 @@ while ( nfiles <= count ):
     singleFileList = get_input(nfiles, files)
     mediatorFile = 'mediator_'+prefix+'_'+str(j)+'.root'
 
-    genId_templ_file = open(relBase+'/src/LJMet/Com/condor_TTinclusive/produceDeepAK8_template.py')
-    genId_file = open(tempdir+'/produceDeepAK8_'+prefix+'_'+str(j)+'.py','w')
+    genId_templ_file = open(relBase+'/src/LJMet/Com/condor_TTinclusive/produce_L1_MET_EgV2_dpAK8_ttGen_template_cfg.py')
+    genId_file = open(tempdir+'/producer_'+prefix+'_'+str(j)+'.py','w')
     for line in genId_templ_file:
         line=line.replace('CONDOR_FILELIST', singleFileList)
         line=line.replace('CONDOR_ISMC', useMC)
+        line=line.replace('CONDOR_ISTTBAR', isTTbar)
         line=line.replace('CONDOR_MEDIATOR', mediatorFile)
         genId_file.write(line)
     genId_file.close()
@@ -174,6 +179,7 @@ while ( nfiles <= count ):
         line=line.replace('CONDOR_MEDIATOR', mediatorFile)
         line=line.replace('CONDOR_OUTFILE',  prefix+'_'+str(j))
         line=line.replace('SAVEGENHT',  saveGHT)
+        line=line.replace('NEWPDF',  newpdf)
         if 'JECup' in shift  and 'JECup' in line: line=line.replace('False',  'True')
         if 'JECdown' in shift and 'JECdown' in line: line=line.replace('False',  'True')
         if 'JERup' in shift and 'JERup' in line: line=line.replace('False',  'True')
@@ -204,11 +210,11 @@ if (submit):
     savedPath = os.getcwd()
     os.chdir(tempdir)
     print 'Submitting',njobs,'jobs!'
-    proc = subprocess.Popen(['condor_submit', prefix+'_1.jdl'], stdout=subprocess.PIPE) 
-    (out, err) = proc.communicate()
-    if len(out) > 0: print "condor output:", out
+    #proc = subprocess.Popen(['condor_submit', prefix+'_1.jdl'], stdout=subprocess.PIPE) 
+    #(out, err) = proc.communicate()
+    #if len(out) > 0: print "condor output:", out
 
-    for k in range(2,njobs+1):
+    for k in range(1,njobs+1):
         os.system('condor_submit '+prefix+'_'+str(k)+'.jdl')
         os.system('sleep 0.5')
 

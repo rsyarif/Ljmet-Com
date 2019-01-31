@@ -77,12 +77,7 @@ public:
     // executes after loop over events
     virtual void EndJob();
 
-    boost::shared_ptr<PFJetIDSelectionFunctor> const & jetSel()        const { return jetSel_;}
     boost::shared_ptr<PVSelector>              const & pvSel()         const { return pvSel_;}
-    boost::shared_ptr<PFMuonSelector>          const & muonSel()       const { return muonSel_;}
-    boost::shared_ptr<PFMuonSelector>          const & looseMuonSel()       const { return looseMuonSel_;}
-    boost::shared_ptr<TopElectronSelector>     const & electronSel()   const { return electronSel_;}
-    boost::shared_ptr<TopElectronSelector>     const & looseElectronSel()   const { return looseElectronSel_;}
 
 protected:
     std::string legend;
@@ -96,12 +91,7 @@ protected:
     std::map<std::string, edm::InputTag> mtPar;
     std::map<std::string,std::vector<std::string> > mvsPar;
 
-    boost::shared_ptr<PFJetIDSelectionFunctor> jetSel_;
     boost::shared_ptr<PVSelector>              pvSel_;
-    boost::shared_ptr<PFMuonSelector>          muonSel_;
-    boost::shared_ptr<PFMuonSelector>          looseMuonSel_;
-    boost::shared_ptr<TopElectronSelector>     electronSel_;
-    boost::shared_ptr<TopElectronSelector>     looseElectronSel_;
 
     edm::Handle<edm::TriggerResults >           mhEdmTriggerResults;
     edm::Handle<std::vector<pat::Jet> >         mhJets;
@@ -142,18 +132,6 @@ void singleLepEventSelector::BeginJob( std::map<std::string, edm::ParameterSet c
 
     std::string _key;
 
-    _key = "pfJetIDSelector";
-    if ( par.find(_key)!=par.end() ){
-      jetSel_ = boost::shared_ptr<PFJetIDSelectionFunctor>( new PFJetIDSelectionFunctor(par[_key]) );
-      std::cout << mLegend << "jet ID selector configured!"
-		<< std::endl;
-    }
-    else {
-      std::cout << mLegend << "jet ID selector not configured, exiting"
-		<< std::endl;
-      std::exit(-1);
-    }
-    
     _key = "pvSelector";
     if ( par.find(_key)!=par.end() ){
         pvSel_ = boost::shared_ptr<PVSelector>( new PVSelector(par[_key]) );
@@ -163,51 +141,6 @@ void singleLepEventSelector::BeginJob( std::map<std::string, edm::ParameterSet c
     else {
         std::cout << mLegend << "PV selector not configured, exiting"
                   << std::endl;
-        std::exit(-1);
-    }
-    _key = "pfMuonSelector";
-    if ( par.find(_key)!=par.end() ){
-        muonSel_ = boost::shared_ptr<PFMuonSelector>( new PFMuonSelector(par[_key]) );
-        std::cout << mLegend << "muon selector configured!"
-        << std::endl;
-    }
-    else {
-        std::cout << mLegend << "muon selector not configured, exiting"
-        << std::endl;
-        std::exit(-1);
-    }
-    _key = "LoosepfMuonSelector";
-    if ( par.find(_key)!=par.end() ){
-        looseMuonSel_ = boost::shared_ptr<PFMuonSelector>( new PFMuonSelector(par[_key]) );
-        std::cout << mLegend << "loose muon selector configured!"
-        << std::endl;
-    }
-    else {
-        std::cout << mLegend << "loose muon selector not configured, exiting"
-        << std::endl;
-        std::exit(-1);
-    }
-
-    _key = "TopElectronSelector";
-    if ( par.find(_key)!=par.end() ){
-        electronSel_ = boost::shared_ptr<TopElectronSelector>( new TopElectronSelector(par[_key]) );
-        std::cout << mLegend << "top electron selector configured!"
-        << std::endl;
-    }
-    else {
-        std::cout << mLegend << "top electron selector not configured, exiting"
-        << std::endl;
-        std::exit(-1);
-    }
-    _key = "LooseTopElectronSelector";
-    if ( par.find(_key)!=par.end() ){
-        looseElectronSel_ = boost::shared_ptr<TopElectronSelector>( new TopElectronSelector(par[_key]) );
-        std::cout << mLegend << "loose top electron selector configured!"
-        << std::endl;
-    }
-    else {
-        std::cout << mLegend << "loose top electron selector not configured, exiting"
-        << std::endl;
         std::exit(-1);
     }
 
@@ -239,14 +172,12 @@ void singleLepEventSelector::BeginJob( std::map<std::string, edm::ParameterSet c
         mdPar["leading_jet_pt"]           = par[_key].getParameter<double>       ("leading_jet_pt");
 
         mbPar["muon_cuts"]                 = par[_key].getParameter<bool>         ("muon_cuts");
-        mbPar["muon_selector"]             = par[_key].getParameter<bool>         ("muon_selector");
         mbPar["muon_selector_medium"]      = par[_key].getParameter<bool>         ("muon_selector_medium");
         mdPar["muon_reliso"]               = par[_key].getParameter<double>       ("muon_reliso");
         mdPar["muon_dxy"]                  = par[_key].getParameter<double>       ("muon_dxy");
         mdPar["muon_dz"]                   = par[_key].getParameter<double>       ("muon_dz");
         mdPar["muon_minpt"]                = par[_key].getParameter<double>       ("muon_minpt");
         mdPar["muon_maxeta"]               = par[_key].getParameter<double>       ("muon_maxeta");
-        mbPar["loose_muon_selector"]       = par[_key].getParameter<bool>         ("loose_muon_selector");
         mbPar["loose_muon_selector_tight"] = par[_key].getParameter<bool>         ("loose_muon_selector_tight");
         mdPar["loose_muon_reliso"]         = par[_key].getParameter<double>       ("loose_muon_reliso");
         mdPar["loose_muon_dxy"]            = par[_key].getParameter<double>       ("loose_muon_dxy");
@@ -281,10 +212,6 @@ void singleLepEventSelector::BeginJob( std::map<std::string, edm::ParameterSet c
 	  mdPar["electron_miniIso"]        = -999;
 	  mdPar["loose_electron_miniIso"]  = -999;
 	}
-        if (par[_key].exists("UseElMVA")) {
-            mvdPar["tight_electron_mva_cuts"] = par[_key].getParameter<std::vector<double>> ("tight_electron_mva_cuts");
-            mvdPar["loose_electron_mva_cuts"] = par[_key].getParameter<std::vector<double>> ("loose_electron_mva_cuts");
-        }
 
         miPar["min_lepton"]               = par[_key].getParameter<int>          ("min_lepton");
         miPar["max_lepton"]               = par[_key].getParameter<int>          ("max_lepton");
@@ -323,7 +250,8 @@ void singleLepEventSelector::BeginJob( std::map<std::string, edm::ParameterSet c
 	else                                 mdPar["LepJetDRAK8"] = 0.8;
         if (par[_key].exists("UseElMVA")) mbPar["UseElMVA"] = par[_key].getParameter<bool>         ("UseElMVA");
         else                              mbPar["UseElMVA"] = false;
-      
+	if (par[_key].exists("UseElIDV1")) mbPar["UseElIDV1"] = par[_key].getParameter<bool>("UseElIDV1");
+	else                               mbPar["UseElIDV1"] = true;
 
         std::cout << mLegend << "config parameters loaded..."
                   << std::endl;
@@ -358,7 +286,6 @@ void singleLepEventSelector::BeginJob( std::map<std::string, edm::ParameterSet c
     push_back("Max lepton");
     push_back("Min loose lepton");
     push_back("Max loose lepton");
-    //push_back("Trigger consistent");
     push_back("Second lepton veto");
     push_back("Tau veto");
     push_back("1 btag or more");
@@ -375,7 +302,7 @@ void singleLepEventSelector::BeginJob( std::map<std::string, edm::ParameterSet c
  
     if (mbPar["jet_cuts"]){
         set("One jet or more", true);
-        set("Two jets or more", true);
+        set("Two jets or more", false);
         set("Three jets or more", false);
         set("Min jet multiplicity", miPar["min_jet"]);
         set("Max jet multiplicity", miPar["max_jet"]);
@@ -401,7 +328,6 @@ void singleLepEventSelector::BeginJob( std::map<std::string, edm::ParameterSet c
     set("Max lepton", miPar["max_lepton"]);  
     set("Min loose lepton", miPar["min_loose_lepton"]);  
     set("Max loose lepton", miPar["max_loose_lepton"]);  
-    //set("Trigger consistent", mbPar["trigger_consistent"]);  
     set("Second lepton veto", mbPar["second_lepton_veto"]);
     set("Tau veto", mbPar["tau_veto"]);
      
@@ -426,12 +352,6 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 
   if(!mbPar["isMc"]) BaseEventSelector::JECbyIOV(event);
 
-    pat::strbitset retJet            = jetSel_->getBitTemplate();
-    pat::strbitset retMuon           = muonSel_->getBitTemplate();
-    pat::strbitset retLooseMuon      = looseMuonSel_->getBitTemplate();
-    pat::strbitset retElectron       = electronSel_->getBitTemplate();
-    pat::strbitset retLooseElectron  = looseElectronSel_->getBitTemplate();
-    
     while(1){ // standard infinite while loop trick to avoid nested ifs
     
         passCut(ret, "No selection");
@@ -572,7 +492,7 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 	//______ MET Filters ___________________
 	//
 	if (considerCut("MET filters")) {
-	  /// In 76X all flags can come from MiniAOD:
+
 	  edm::Handle<edm::TriggerResults > PatTriggerResults;
 	  event.getByLabel( mtPar["flag_tag"], PatTriggerResults );
 	  const edm::TriggerNames patTrigNames = event.triggerNames(*PatTriggerResults);
@@ -590,7 +510,7 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 	  
 	  for (unsigned int i=0; i<PatTriggerResults->size(); i++){
 	    if (patTrigNames.triggerName(i) == "Flag_goodVertices") goodvertpass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
-	    if (patTrigNames.triggerName(i) == "Flag_globalTightHalo2016Filter") globaltighthalopass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
+	    if (patTrigNames.triggerName(i) == "Flag_globalSuperTightHalo2016Filter") globaltighthalopass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
 	    if (patTrigNames.triggerName(i) == "Flag_HBHENoiseFilter") hbhenoisepass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
 	    if (patTrigNames.triggerName(i) == "Flag_HBHENoiseIsoFilter") hbhenoiseisopass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
 	    if (patTrigNames.triggerName(i) == "Flag_EcalDeadCellTriggerPrimitiveFilter") ecaldeadcellpass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
@@ -598,7 +518,12 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 	    if (patTrigNames.triggerName(i) == "Flag_BadChargedCandidateFilter") badchargedcandpass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
 	    if (patTrigNames.triggerName(i) == "Flag_eeBadScFilter") eebadscpass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
 	    if (patTrigNames.triggerName(i) == "Flag_ecalBadCalibFilter") eebadcalibpass = PatTriggerResults->accept(patTrigNames.triggerIndex(patTrigNames.triggerName(i)));
+	  }
 
+	  // Rerun ecalBadCalibReducedMINIAODFilter if possible
+	  edm::Handle<bool> passecalBadCalibFilterUpdate;
+	  if(event.getByLabel(edm::InputTag("ecalBadCalibReducedMINIAODFilter") , passecalBadCalibFilterUpdate)){
+	    eebadcalibpass = *passecalBadCalibFilterUpdate;
 	  }
 	  
 	  if(hbhenoisepass && hbhenoiseisopass && globaltighthalopass && ecaldeadcellpass && (mbPar["isMc"] || eebadscpass) && goodvertpass && badpfmuonpass && badchargedcandpass && eebadcalibpass){
@@ -641,124 +566,109 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 	    double myRhoJetsNC = *rhoJetsNC;
 
             for (std::vector<pat::Muon>::const_iterator _imu = mhMuons->begin(); _imu != mhMuons->end(); _imu++){
-                retMuon.set(false);	
-                bool pass = false;
+	      bool pass = false;
     
-                //muon cuts
-                while(1){
+	      //muon cuts
+	      while(1){
 
-		    if (mbPar["muon_selector"]) {
-                        if ( (*muonSel_)( *_imu, retMuon ) ){ }
-                        else break; // fail
-		    }
-		    else {
-		      if ( mbPar["muon_selector_medium"] && (*_imu).passed(reco::Muon::CutBasedIdMedium) ){ }
-                        else if ( !mbPar["muon_selector_medium"] && (*_imu).passed(reco::Muon::CutBasedIdTight) ){ }
-		        else break; // fail
+		if ( mbPar["muon_selector_medium"] && (*_imu).passed(reco::Muon::CutBasedIdMedium) ){ }
+		else if ( !mbPar["muon_selector_medium"] && (*_imu).passed(reco::Muon::CutBasedIdTight) ){ }
+		else break; // fail
+		  
+		//pat::Muon* muptr = new pat::Muon(*_imu);
+		//float miniIso = getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate* > (muptr), 0.05, 0.2, 10., false, false,myRhoJetsNC);
 
-		        //pat::Muon* muptr = new pat::Muon(*_imu);
-			//float miniIso = getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate* > (muptr), 0.05, 0.2, 10., false, false,myRhoJetsNC);
+		double chIso = (*_imu).pfIsolationR04().sumChargedHadronPt;
+		double nhIso = (*_imu).pfIsolationR04().sumNeutralHadronEt;
+		double gIso  = (*_imu).pfIsolationR04().sumPhotonEt;
+		double puIso = (*_imu).pfIsolationR04().sumPUPt;
+		
+		double pt    = (*_imu).pt() ;
 
-                        double chIso = (*_imu).pfIsolationR04().sumChargedHadronPt;
-                        double nhIso = (*_imu).pfIsolationR04().sumNeutralHadronEt;
-                        double gIso  = (*_imu).pfIsolationR04().sumPhotonEt;
-                        double puIso = (*_imu).pfIsolationR04().sumPUPt;
+		double pfIso = (chIso + std::max(0.,nhIso + gIso - 0.5*puIso))/pt;
 
-		        double pt    = (*_imu).pt() ;
+		if (!mbPar["muon_useMiniIso"] && pfIso<mdPar["muon_reliso"] ) {}
+		else if (mbPar["muon_useMiniIso"] && (*_imu).passed(reco::Muon::MiniIsoTight) ) {}
+		else{ break;}
 
-		        double pfIso = (chIso + std::max(0.,nhIso + gIso - 0.5*puIso))/pt;
-
-		        if (!mbPar["muon_useMiniIso"] && pfIso<mdPar["muon_reliso"] ) {}
-			else if (mbPar["muon_useMiniIso"] && (*_imu).passed(reco::Muon::MiniIsoTight) ) {}
-			else{ break;}
-		    }
-
-                    if (mvSelPVs.size() > 0){
-                        if ( fabs((*_imu).muonBestTrack()->dxy((*mvSelPVs[0]).position())) < mdPar["muon_dxy"] ){ }
-                        else break;
-                        if ( fabs((*_imu).muonBestTrack()->dz((*mvSelPVs[0]).position())) < mdPar["muon_dz"] ){ }
-                        else break;
-                    }
-                    
-                    if ( _imu->pt()>mdPar["muon_minpt"] ){ }
-                    else break;
-
-                    if ( fabs(_imu->eta())<mdPar["muon_maxeta"] ){ }
-                    else break;
-                    
-                    pass = true; // success
-                    break;
-                }
-
-                if ( pass ){
-                    ++nSelMuons; 
-
-                    // save every good muon
-                    mvSelMuons.push_back( edm::Ptr<pat::Muon>( mhMuons, _n_muons) );
-		    mvLooseMuons.push_back( edm::Ptr<pat::Muon>( mhMuons, _n_muons) );
-                }
-		else {
-                    retLooseMuon.set(false);	
-                    bool pass_loose = false;
-    
-                    //muon cuts
-                    while(1){
-    
-    		        if (mbPar["loose_muon_selector"]) {
-                            if ( (*looseMuonSel_)( *_imu, retLooseMuon ) ){ }
-                            else break; // fail
-    		        }
-    		        else {
-    		            if (mbPar["loose_muon_selector_tight"]) {
-			      if ( (*_imu).passed(reco::Muon::CutBasedIdTight) ){ } 
-    		                else break; // fail
-                            }
-    		            else {
-			      if ( (*_imu).passed(reco::Muon::CutBasedIdLoose) ){ } 
-    		                else break; // fail
-                            }
-
-			    //			    pat::Muon* muptr = new pat::Muon(*_imu);
-			    //float miniIso = getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate* > (muptr), 0.05, 0.2, 10., false, false,myRhoJetsNC);
-
-                            double chIso = (*_imu).pfIsolationR04().sumChargedHadronPt;
-                            double nhIso = (*_imu).pfIsolationR04().sumNeutralHadronEt;
-                            double gIso  = (*_imu).pfIsolationR04().sumPhotonEt;
-                            double puIso = (*_imu).pfIsolationR04().sumPUPt;
-    		            double pt    = (*_imu).pt() ;
-    
-    		            double pfIso = (chIso + std::max(0.,nhIso + gIso - 0.5*puIso))/pt;
-    
-			    if (!mbPar["muon_useMiniIso"] && pfIso<mdPar["loose_muon_reliso"] ) {}
-			    else if (mbPar["muon_useMiniIso"] && (*_imu).passed(reco::Muon::MiniIsoLoose) ) {}
-			    else{ break;}
-			  
-    		        }
-
-                        if (mvSelPVs.size() > 0){
-                            if ( fabs((*_imu).muonBestTrack()->dxy((*mvSelPVs[0]).position())) < mdPar["loose_muon_dxy"] ){ }
-                            else break;
-                            if ( fabs((*_imu).muonBestTrack()->dz((*mvSelPVs[0]).position())) < mdPar["loose_muon_dz"] ){ }
-                            else break;
-                        }
-                        
-                        if ( _imu->pt()>mdPar["loose_muon_minpt"] ){ }
-                        else break;
-    
-                        if ( fabs(_imu->eta())<mdPar["loose_muon_maxeta"] ){ }
-                        else break;
-    
-                        pass_loose = true; // success
-                        break;
-                    }
-    
-                    if ( pass_loose ){
-		      mvLooseMuons.push_back( edm::Ptr<pat::Muon>( mhMuons, _n_muons) );
-		      ++nLooseMuons; 
-		    }
+		if (mvSelPVs.size() > 0){
+		  if ( fabs((*_imu).muonBestTrack()->dxy((*mvSelPVs[0]).position())) < mdPar["muon_dxy"] ){ }
+		  else break;
+		  if ( fabs((*_imu).muonBestTrack()->dz((*mvSelPVs[0]).position())) < mdPar["muon_dz"] ){ }
+		  else break;
 		}
-                	
-                _n_muons++;
+                    
+		if ( _imu->pt()>mdPar["muon_minpt"] ){ }
+		else break;
+
+		if ( fabs(_imu->eta())<mdPar["muon_maxeta"] ){ }
+		else break;
+                    
+		pass = true; // success
+		break;
+	      }
+	      
+	      if ( pass ){
+		++nSelMuons; 
+
+		// save every good muon
+		mvSelMuons.push_back( edm::Ptr<pat::Muon>( mhMuons, _n_muons) );
+		mvLooseMuons.push_back( edm::Ptr<pat::Muon>( mhMuons, _n_muons) );
+	      }
+	      else {
+		bool pass_loose = false;
+    
+		//muon cuts
+		while(1){
+    
+		  if (mbPar["loose_muon_selector_tight"]) {
+		    if ( (*_imu).passed(reco::Muon::CutBasedIdTight) ){ } 
+		    else break; // fail
+		  }
+		  else {
+		    if ( (*_imu).passed(reco::Muon::CutBasedIdLoose) ){ } 
+		    else break; // fail
+		  }
+		  
+		  //			    pat::Muon* muptr = new pat::Muon(*_imu);
+		  //float miniIso = getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate* > (muptr), 0.05, 0.2, 10., false, false,myRhoJetsNC);
+
+		  double chIso = (*_imu).pfIsolationR04().sumChargedHadronPt;
+		  double nhIso = (*_imu).pfIsolationR04().sumNeutralHadronEt;
+		  double gIso  = (*_imu).pfIsolationR04().sumPhotonEt;
+		  double puIso = (*_imu).pfIsolationR04().sumPUPt;
+		  double pt    = (*_imu).pt() ;
+		  
+		  double pfIso = (chIso + std::max(0.,nhIso + gIso - 0.5*puIso))/pt;
+		  
+		  if (!mbPar["muon_useMiniIso"] && pfIso<mdPar["loose_muon_reliso"] ) {}
+		  else if (mbPar["muon_useMiniIso"] && (*_imu).passed(reco::Muon::MiniIsoLoose) ) {}
+		  else{ break;}
+		  
+		  if (mvSelPVs.size() > 0){
+		    if ( fabs((*_imu).muonBestTrack()->dxy((*mvSelPVs[0]).position())) < mdPar["loose_muon_dxy"] ){ }
+		    else break;
+		    if ( fabs((*_imu).muonBestTrack()->dz((*mvSelPVs[0]).position())) < mdPar["loose_muon_dz"] ){ }
+		    else break;
+		  }
+                        
+		  if ( _imu->pt()>mdPar["loose_muon_minpt"] ){ }
+		  else break;
+		  
+		  if ( fabs(_imu->eta())<mdPar["loose_muon_maxeta"] ){ }
+		  else break;
+    
+		  pass_loose = true; // success
+		  break;
+		}
+    
+		if ( pass_loose ){
+		  mvLooseMuons.push_back( edm::Ptr<pat::Muon>( mhMuons, _n_muons) );
+		  ++nLooseMuons; 
+		}
+	      }
+              
+	      _n_muons++;
             } // end of the muon loop
 
         } // end of muon cuts
@@ -791,7 +701,6 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 
 	    size_t j = 0;
             for (std::vector<pat::Electron>::const_iterator _iel = mhElectrons->begin(); _iel != mhElectrons->end(); _iel++){
-	        retElectron.set(false);
                 bool pass = false;
 
                 //electron cuts
@@ -811,15 +720,9 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 
 		      //bool mvapass = true;  // HACK FOR TESTING THE MVA EFFICIENCY
 		      bool mvapass = false;
-		      if ( fabs(_iel->superCluster()->eta())<=0.8){
-			mvapass = mvaValue( *_iel, event) > (mvdPar["tight_electron_mva_cuts"].at(0) - mvdPar["tight_electron_mva_cuts"].at(2)*exp(-1*_iel->pt()/mvdPar["tight_electron_mva_cuts"].at(1)));
-		      }
-		      else if ( fabs(_iel->superCluster()->eta())<=1.479 && fabs(_iel->superCluster()->eta())>0.8){
-			mvapass = mvaValue( *_iel, event) > (mvdPar["tight_electron_mva_cuts"].at(3) - mvdPar["tight_electron_mva_cuts"].at(5)*exp(-1*_iel->pt()/mvdPar["tight_electron_mva_cuts"].at(4)));
-		      }
-		      else{
-			mvapass = mvaValue( *_iel, event) > (mvdPar["tight_electron_mva_cuts"].at(6) - mvdPar["tight_electron_mva_cuts"].at(8)*exp(-1*_iel->pt()/mvdPar["tight_electron_mva_cuts"].at(7)));
-		      }
+		      if(mbPar["UseElIDV1"]) mvapass = _iel->electronID("mvaEleID-Fall17-noIso-V1-wp90");
+		      else mvapass = _iel->electronID("mvaEleID-Fall17-noIso-V2-wp90");
+
 		      if (!mvapass) break;
 		      
 		      if(mbPar["electron_useMiniIso"]){
@@ -833,8 +736,11 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 		      }
                     }
                     else {
-		      if ( (*electronSel_)( *_iel, event, retElectron ) ){ }
-		      else break; // fail
+		      bool cutbasedpass = false;
+		      if(mbPar["UseElIDV1"]) cutbasedpass = _iel->electronID("cutBasedElectronID-Fall17-94X-V1-tight");
+		      else cutbasedpass = _iel->electronID("cutBasedElectronID-Fall17-94X-V2-tight");
+		      
+		      if(!cutbasedpass) break;
                     }
 		    
                     pass = true; // success
@@ -850,7 +756,6 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 		    mvLooseElectrons.push_back( edm::Ptr<pat::Electron>( mhElectrons, _n_electrons) );
                 }	
 		else {
-    	            retLooseElectron.set(false);
                     bool pass_loose = false;
     
                     //electron cuts
@@ -868,9 +773,10 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
                         if ( mbPar["UseElMVA"] ) {
 			  //bool mvapass = true; // HACK FOR TESTING THE MVA EFFICIENCY
 			  bool mvapass = false;
-			  if ( fabs(_iel->superCluster()->eta())<=0.8 ) mvapass = mvaValue( *_iel, event) > mvdPar["loose_electron_mva_cuts"].at(0);
-			  else if ( fabs(_iel->superCluster()->eta())<=1.479 ) mvapass = mvaValue( *_iel, event) > mvdPar["loose_electron_mva_cuts"].at(1);
-			  else mvapass = mvaValue( *_iel, event) > mvdPar["loose_electron_mva_cuts"].at(2);
+
+			  if(mbPar["UseElIDV1"]) mvapass = _iel->electronID("mvaEleID-Fall17-noIso-V1-wpLoose");
+			  else mvapass = _iel->electronID("mvaEleID-Fall17-noIso-V2-wpLoose");
+
 			  if (!mvapass) break;
 			  
 			  if(mbPar["electron_useMiniIso"]){
@@ -884,8 +790,11 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 			  }
                         }
                         else {
-                            if ( (*looseElectronSel_)( *_iel, event, retLooseElectron ) ){ }
-                            else break; // fail
+			  bool cutbasedpass = false;
+			  if(mbPar["UseElIDV1"]) cutbasedpass = _iel->electronID("cutBasedElectronID-Fall17-94X-V1-loose");
+			  else cutbasedpass = _iel->electronID("cutBasedElectronID-Fall17-94X-V2-loose");
+			  
+			  if(!cutbasedpass) break;
                         }
 
                         pass_loose = true; // success
@@ -977,8 +886,6 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
 
         for (std::vector<pat::Jet>::const_iterator _ijet = mhJets->begin();
              _ijet != mhJets->end(); ++_ijet){
-
-            retJet.set(false);
 
             bool _pass = false;
             bool _passpf = false;
@@ -1185,8 +1092,6 @@ bool singleLepEventSelector::operator()( edm::EventBase const & event, pat::strb
       
       	    if(_ijet->pt() < 170) continue;
 	    if(_ijet->correctedJet(0).pt() < 170) continue;
-
-            retJet.set(false);
 
             bool _pass = false;
             bool _passpf = false;
