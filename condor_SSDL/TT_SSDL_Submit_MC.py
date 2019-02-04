@@ -17,7 +17,8 @@ rel_base = os.environ['CMSSW_BASE']
 cmssw = 'CMSSW_9_4_11'
 # logdir = 'LJMet94x_2lepTT_2017datasets_2018_11_16_rizki' #TEST
 # logdir = 'LJMet94x_2lepTT_2017datasets_2018_11_18_rizki'
-logdir = 'LJMet94x_2lepTT_2017datasets_2019_1_10_rizki' #More Triggers
+# logdir = 'LJMet94x_2lepTT_2017datasets_2019_1_13_rizki' #More Triggers
+logdir = 'LJMet94x_2lepTT_2017datasets_2019_2_1_rizki' #More Triggers: HT
 outdir = '/eos/uscms/store/group/lpcljm/'+logdir+'/'
 
 ### What is the name of your FWLite Analyzer

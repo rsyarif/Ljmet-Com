@@ -9,7 +9,9 @@ import commands
 rel_base = os.environ['CMSSW_BASE']
 cmssw = 'CMSSW_9_4_11'
 date = 'Dec14'
-folder  = 'LJMet94x_2lepTT_2017datasets_2018_11_18_rizki'
+# folder  = 'LJMet94x_2lepTT_2017datasets_2018_11_18_rizki'
+# folder	= 'LJMet94x_2lepTT_2017datasets_FakeRate_2019_1_8_rizki'
+folder	= 'LJMet94x_2lepTT_2017datasets_2019_1_13_rizki'
 
 locdir = 'hadd_jobs_'+folder
 basedir = '/store/group/lpcljm/'
@@ -22,46 +24,51 @@ eosdir = '/store/group/lpcljm/'+folder+'_hadds/'
 #################################################
 
 samples = [
-    'DoubleEG_RRB',
-    'DoubleEG_RRC',
-    'DoubleEG_RRD',
-    'DoubleEG_RRE',
-    'DoubleEG_RRF_v2',
-    'MuonEG_RRB',
-    'MuonEG_RRC',
-    'MuonEG_RRD',
-    'MuonEG_RRE',
-    'MuonEG_RRF_v2',
-    'DoubleMuon_RRB',
-    'DoubleMuon_RRC',
-    'DoubleMuon_RRD',
-    'DoubleMuon_RRE',
-    'DoubleMuon_RRF_v2',
+#     'DoubleEG_RRB',
+#     'DoubleEG_RRC',
+#     'DoubleEG_RRD',
+#     'DoubleEG_RRE',
+#     'DoubleEG_RRF',
+   #  'DoubleEG_RRF_v2',
+#     'MuonEG_RRB',
+#     'MuonEG_RRC',
+#     'MuonEG_RRD',
+#     'MuonEG_RRE',
+#     'MuonEG_RRF',
+   #  'MuonEG_RRF_v2',
+#     'DoubleMuon_RRB',
+#     'DoubleMuon_RRC',
+#     'DoubleMuon_RRD',
+#     'DoubleMuon_RRE',
+    'DoubleMuon_RRF',
+   #  'DoubleMuon_RRF_v2',
 
-   'TTW',
-   'TTZ',
-   'TTH',
-   'TTTT',
+#    'TTW',
+#    'TTZ',
+#    'TTH',
+#    'TTTT',
+# 
+#    'WWW',
+#    'WWZ',
+#    'WZZ',
+#    'ZZZ',
+# 
+#    'WpWp',
+#    'WZ',
+#    'ZZ',
+#    'ZZ_part1',
+#    'ZZ_part2',
+# 
+#   'TprimeTprime_M-1000',
+#   'TprimeTprime_M-1100',
+#   'TprimeTprime_M-1200',
+#   'TprimeTprime_M-1300',
+#   'TprimeTprime_M-1400',
+#   'TprimeTprime_M-1500',
+#   'TprimeTprime_M-1600',
+#   'TprimeTprime_M-1700',
+#   'TprimeTprime_M-1800',
 
-   'WWW',
-   'WWZ',
-   'WZZ',
-   'ZZZ',
-   
-   'WpWp',
-   'WZ',
-   'ZZ',
-   
-#    'TprimeTprime_M-1000',
-   'TprimeTprime_M-1100',
-   'TprimeTprime_M-1200',
-   'TprimeTprime_M-1300',
-   'TprimeTprime_M-1400',
-   'TprimeTprime_M-1500',
-   'TprimeTprime_M-1600',
-   'TprimeTprime_M-1700',
-   'TprimeTprime_M-1800',
-   
 ]
 
 #samples = []
@@ -80,7 +87,7 @@ systlist = [
 
 #samples = ['Wprime3100Right','Wprime3200Right','Wprime3300Right','Wprime3400Right','Wprime3500Right','Wprime3600Right','Wprime3700Right','Wprime3800Right','Wprime3900Right','Wprime4000Right']
 
-### Write the files you wish to run over for each job    
+### Write the files you wish to run over for each job
 
 #make local directory
 os.system('mkdir -p  %s' %locdir)
@@ -92,7 +99,7 @@ for i in range(len(samples)):
         if(sys!='NOM'): continue
         condor_templ_file = open(rel_base+"/src/LJMet/Com/condor_SSDL/PostLJMetcondor.templ")
         csh_templ_file    = open(rel_base+"/src/LJMet/Com/condor_SSDL/PostLJMetcsh.templ")
-    
+
         localcondor = locdir+'/'+samples[i]+sys+".condor"
         if (sys=='NOM'): localcondor = locdir+'/'+samples[i]+".condor"
         condor_file = open(localcondor,"w")
@@ -102,7 +109,7 @@ for i in range(len(samples)):
             else: line=line.replace('PREFIX',samples[i]+sys)
             condor_file.write(line)
         condor_file.close()
-    
+
         localcsh=locdir+'/'+samples[i]+sys+".csh"
         if (sys=='NOM'): localcsh=locdir+'/'+samples[i]+".csh"
         csh_file = open(localcsh,"w")
@@ -116,8 +123,8 @@ for i in range(len(samples)):
 				line=line.replace('XRDCP', 'xrdcp -f '+samples[i]+sys+'_tmp.root root://cmseos.fnal.gov/'+eosdir+'/'+samples[i]+sys+'.root')
             csh_file.write(line)
         csh_file.close()
-    
-    
+
+
         if (sys=='NOM'): os.system('chmod u+x '+locdir+'/'+samples[i]+'.csh')
         else: os.system('chmod u+x '+locdir+'/'+samples[i]+sys+'.csh')
         print 'condor file is: '+localcondor
@@ -126,7 +133,7 @@ for i in range(len(samples)):
         os.system('echo condor_submit %s' % localcondor)
         os.system('condor_submit %s' % localcondor)
 
-    
+
         condor_templ_file.close()
         csh_templ_file.close()
-    
+
