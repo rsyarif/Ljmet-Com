@@ -13,8 +13,8 @@ cernList=[
 
 externalList = [
 	# USE cmsxrootd.fnal.gov in condor_submit.py UNLESS YOU CHECK THE LIST LOG FOR CERN PRESENCE
-	'SingleElectron_31Mar2018.txt'
-	'SingleMuon_31Mar2018.txt'
+	'SingleElectron_31Mar18.txt',
+	'SingleMuon_31Mar18.txt'
 ]
 	
 print '====== LJMET SUBMISSION ======'
