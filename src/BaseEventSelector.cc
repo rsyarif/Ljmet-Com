@@ -175,7 +175,6 @@ void BaseEventSelector::BeginJob(std::map<std::string, edm::ParameterSet const >
 
         if (par[_key].exists("doNewJEC")) mbPar["doNewJEC"] = par[_key].getParameter<bool> ("doNewJEC");
         else mbPar["doNewJEC"] = false;
-
         
         if (_missing_config) {
             std::cout << mLegend
@@ -218,28 +217,6 @@ void BaseEventSelector::BeginJob(std::map<std::string, edm::ParameterSet const >
     resolution = JME::JetResolution(msPar["JER_txtfile"]);
     resolutionAK8 = JME::JetResolution(msPar["JERAK8_txtfile"]);
     resolution_SF = JME::JetResolutionScaleFactor(msPar["JERSF_txtfile"]);    
-
-    //make runera dependent jec
-    std::vector<JetCorrectorParameters> vPar2016BCD; 
-    vPar2016BCD.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016BCDV2_DATA/Spring16_23Sep2016BCDV2_DATA_L1FastJet_AK4PFchs.txt"));
-    vPar2016BCD.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016BCDV2_DATA/Spring16_23Sep2016BCDV2_DATA_L2Relative_AK4PFchs.txt"));
-    vPar2016BCD.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016BCDV2_DATA/Spring16_23Sep2016BCDV2_DATA_L3Absolute_AK4PFchs.txt"));
-    vPar2016BCD.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016BCDV2_DATA/Spring16_23Sep2016BCDV2_DATA_L2L3Residual_AK4PFchs.txt"));
-    std::vector<JetCorrectorParameters> vPar2016EF;
-    vPar2016EF.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016EFV2_DATA/Spring16_23Sep2016EFV2_DATA_L1FastJet_AK4PFchs.txt"));
-    vPar2016EF.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016EFV2_DATA/Spring16_23Sep2016EFV2_DATA_L2Relative_AK4PFchs.txt"));
-    vPar2016EF.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016EFV2_DATA/Spring16_23Sep2016EFV2_DATA_L3Absolute_AK4PFchs.txt"));
-    vPar2016EF.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016EFV2_DATA/Spring16_23Sep2016EFV2_DATA_L2L3Residual_AK4PFchs.txt"));
-    std::vector<JetCorrectorParameters> vPar2016G;
-    vPar2016G.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016GV2_DATA/Spring16_23Sep2016GV2_DATA_L1FastJet_AK4PFchs.txt"));
-    vPar2016G.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016GV2_DATA/Spring16_23Sep2016GV2_DATA_L2Relative_AK4PFchs.txt"));
-    vPar2016G.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016GV2_DATA/Spring16_23Sep2016GV2_DATA_L3Absolute_AK4PFchs.txt"));
-    vPar2016G.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016GV2_DATA/Spring16_23Sep2016GV2_DATA_L2L3Residual_AK4PFchs.txt"));
-    std::vector<JetCorrectorParameters> vPar2016H;
-    vPar2016H.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016HV2_DATA/Spring16_23Sep2016HV2_DATA_L1FastJet_AK4PFchs.txt"));
-    vPar2016H.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016HV2_DATA/Spring16_23Sep2016HV2_DATA_L2Relative_AK4PFchs.txt"));
-    vPar2016H.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016HV2_DATA/Spring16_23Sep2016HV2_DATA_L3Absolute_AK4PFchs.txt"));
-    vPar2016H.push_back(JetCorrectorParameters("../data/textFiles/Spring16_23Sep2016HV2_DATA/Spring16_23Sep2016HV2_DATA_L2L3Residual_AK4PFchs.txt"));
 
     std::vector<JetCorrectorParameters> vPar;
     std::vector<JetCorrectorParameters> vParAK8;
@@ -474,78 +451,6 @@ void BaseEventSelector::Init( void )
     mpEc->SetHistogram(mName, "nBtagSfCorrections", 100, 0.0, 10.0);
 }
 
-TLorentzVector BaseEventSelector::scaleJet(const pat::Jet& jet, bool up){
-
-    double unc = 1.0;
-    TLorentzVector jetP4;
-    jetP4.SetPtEtaPhiM(jet.pt(), jet.eta(),jet.phi(), jet.mass() );
-    jecUnc->setJetEta(jetP4.Eta());
-    jecUnc->setJetPt(jetP4.Pt());
-    
-    try{
-      unc = jecUnc->getUncertainty(up);
-    }
-    catch(...){ // catch all exceptions. Jet Uncertainty tool throws when binning out of range
-      std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
-      std::cout << mLegend << "WARNING! Possibly, trying to correct a jet/MET outside correction range." << std::endl;
-      std::cout << mLegend << "WARNING! Jet/MET will remain uncorrected." << std::endl;
-      unc = 0.0;
-    }
-    if(up) unc = 1 + unc; 
-    else unc = 1 - unc; 
-
-    //scale pT
-    float pt = jetP4.Pt()*unc;
-    jetP4.SetPtEtaPhiM(pt,jet.eta(),jet.phi(),jet.mass());
-    return jetP4;
-}
-
-TLorentzVector BaseEventSelector::smearJet(const pat::Jet& jet,  edm::EventBase const & event, bool up, bool doAK8){
-
-  //get rho value - would be better not to call it everytime but we already do this....so bad habits everywhere...at least we are consistent
-  edm::Handle<double> rhoHandle;
-  edm::InputTag rhoSrc_("fixedGridRhoFastjetAll", "");
-  event.getByLabel(rhoSrc_, rhoHandle);
-  double rho = std::max(*(rhoHandle.product()), 0.0);
-  double ptscale = 1.0;
-  Variation JERsystematic = Variation::NOMINAL;
-  if(up) JERsystematic = Variation::UP;
-  else JERsystematic = Variation::DOWN;
-  
-  JME::JetParameters parameters;
-  parameters.setJetPt(jet.pt());
-  parameters.setJetEta(jet.eta());
-  parameters.setRho(rho);
-  double res = 0.0;
-  if(doAK8) res = resolutionAK8.getResolution(parameters);
-  else res = resolution.getResolution(parameters);
-  double factor = resolution_SF.getScaleFactor(parameters,JERsystematic) - 1;
-
-  const reco::GenJet * genJet = jet.genJet();
-  bool smeared = false;
-  if(genJet){
-    double deltaPt = fabs(genJet->pt() - jet.pt());
-    double deltaR = reco::deltaR(genJet->p4(),jet.p4());
-    if (deltaR < ((doAK8) ? 0.4 : 0.2) && deltaPt <= 3*jet.pt()*res){
-      double gen_pt = genJet->pt();
-      double reco_pt = jet.pt();
-      double deltapt = (reco_pt - gen_pt) * factor;
-      ptscale = max(0.0, (reco_pt + deltapt) / reco_pt);
-      smeared = true;
-    }
-  }
-  if (!smeared && factor>0) {
-    JERrand.SetSeed(abs(static_cast<int>(jet.phi()*1e4)));
-    ptscale = max(0.0, JERrand.Gaus(jet.pt(),sqrt(factor*(factor+2))*res*jet.pt())/jet.pt());
-  }
-
-  TLorentzVector jetP4;
-  float pt = jet.pt()*ptscale;
-  jetP4.SetPtEtaPhiM(pt,jet.eta(),jet.phi(),jet.mass());
-  return jetP4;
-
-}
-
 TLorentzVector BaseEventSelector::correctJetForMet(const pat::Jet & jet, edm::EventBase const & event, unsigned int syst)
 {
 
@@ -702,7 +607,7 @@ TLorentzVector BaseEventSelector::correctJetForMet(const pat::Jet & jet, edm::Ev
     return offJetP4-jetP4;
 }
 
-TLorentzVector BaseEventSelector::correctJet(const pat::Jet & jet, edm::EventBase const & event, bool doAK8Corr, bool forceCorr, unsigned int syst,int run, bool doEraDepJEC)
+TLorentzVector BaseEventSelector::correctJet(const pat::Jet & jet, edm::EventBase const & event, bool doAK8Corr, bool forceCorr, unsigned int syst)
 {
 
   // JES and JES systematics
@@ -711,28 +616,6 @@ TLorentzVector BaseEventSelector::correctJet(const pat::Jet & jet, edm::EventBas
         correctedJet = jet.correctedJet(0);                 //copy original jet
     else
         correctedJet = jet;                                 //copy default corrected jet
-
-    //get corrector based on run era
-    FactorizedJetCorrector *tmpJetCorrector;
-    if(!doEraDepJEC) tmpJetCorrector = JetCorrector; //do regular if not era dependent
-    else{ //check run info
-      if(run >=1 && run <=276811) tmpJetCorrector = JetCorrector2016BCD; //bcd
-      else if( run >=276831 && run <=278801) tmpJetCorrector = JetCorrector2016EF; //e/f-early
-      else if( run >=278802 && run <=280385) tmpJetCorrector = JetCorrector2016G; //f-late/g
-      else if(run>=280919) tmpJetCorrector=JetCorrector2016H; // h - use else if so that it will hopefully crash if run is not in one of these ranges
-      
-    }
-    //get corrector based on run era - AK8
-    FactorizedJetCorrector *tmpJetCorrectorAK8;
-    if(!doEraDepJEC) tmpJetCorrectorAK8 = JetCorrectorAK8; //do regular if not era dependent
-    else{ //check run info
-      if(run >=1 && run <=276811) tmpJetCorrectorAK8 = JetCorrectorAK82016BCD; //bcd
-      else if( run >=276831 && run <=278801) tmpJetCorrectorAK8 = JetCorrectorAK82016EF; //e/f-early
-      else if( run >=278802 && run <=280385) tmpJetCorrectorAK8 = JetCorrectorAK82016G; //f-late/g
-      else if(run>=280919) tmpJetCorrectorAK8=JetCorrectorAK82016H; // h - use else if so that it will hopefully crash if run is not in one of these ranges
-      
-    }
-
 
     double ptscale = 1.0;
     double unc = 1.0;
@@ -751,13 +634,13 @@ TLorentzVector BaseEventSelector::correctJet(const pat::Jet & jet, edm::EventBas
 
       	    double pt_raw = jet.correctedJet(0).pt();
 	    if (doAK8Corr){
-                tmpJetCorrectorAK8->setJetEta(jet.eta());
-          	tmpJetCorrectorAK8->setJetPt(pt_raw);
-                tmpJetCorrectorAK8->setJetA(jet.jetArea());
-          	tmpJetCorrectorAK8->setRho(rho); 
+                JetCorrectorAK8->setJetEta(jet.eta());
+          	JetCorrectorAK8->setJetPt(pt_raw);
+                JetCorrectorAK8->setJetA(jet.jetArea());
+          	JetCorrectorAK8->setRho(rho); 
     
                 try{
-    		    correction = tmpJetCorrectorAK8->getCorrection();
+    		    correction = JetCorrectorAK8->getCorrection();
                 }
           	catch(...){
     		    std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
@@ -767,13 +650,13 @@ TLorentzVector BaseEventSelector::correctJet(const pat::Jet & jet, edm::EventBas
 	    }
 
 	    else{
-                tmpJetCorrector->setJetEta(jet.eta());
-          	tmpJetCorrector->setJetPt(pt_raw);
-                tmpJetCorrector->setJetA(jet.jetArea());
-          	tmpJetCorrector->setRho(rho); 
+                JetCorrector->setJetEta(jet.eta());
+          	JetCorrector->setJetPt(pt_raw);
+                JetCorrector->setJetA(jet.jetArea());
+          	JetCorrector->setRho(rho); 
     
                 try{
-    		    correction = tmpJetCorrector->getCorrection();
+    		    correction = JetCorrector->getCorrection();
                 }
           	catch(...){
     		    std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
@@ -863,13 +746,13 @@ TLorentzVector BaseEventSelector::correctJet(const pat::Jet & jet, edm::EventBas
 	// We need to undo the default corrections and then apply the new ones
 	
 	if (doAK8Corr){
-	  tmpJetCorrectorAK8->setJetEta(jet.eta());
-	  tmpJetCorrectorAK8->setJetPt(pt_raw);
-	  tmpJetCorrectorAK8->setJetA(jet.jetArea());
-	  tmpJetCorrectorAK8->setRho(rho); 
+	  JetCorrectorAK8->setJetEta(jet.eta());
+	  JetCorrectorAK8->setJetPt(pt_raw);
+	  JetCorrectorAK8->setJetA(jet.jetArea());
+	  JetCorrectorAK8->setRho(rho); 
 	  
 	  try{
-	    correction = tmpJetCorrectorAK8->getCorrection();
+	    correction = JetCorrectorAK8->getCorrection();
 	  }
 	  catch(...){
 	    std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
@@ -879,13 +762,13 @@ TLorentzVector BaseEventSelector::correctJet(const pat::Jet & jet, edm::EventBas
 	}
 	
 	else{
-	  tmpJetCorrector->setJetEta(jet.eta());
-	  tmpJetCorrector->setJetPt(pt_raw);
-	  tmpJetCorrector->setJetA(jet.jetArea());
-	  tmpJetCorrector->setRho(rho); 
+	  JetCorrector->setJetEta(jet.eta());
+	  JetCorrector->setJetPt(pt_raw);
+	  JetCorrector->setJetA(jet.jetArea());
+	  JetCorrector->setRho(rho); 
 	  
 	  try{
-	    correction = tmpJetCorrector->getCorrection();
+	    correction = JetCorrector->getCorrection();
 	  }
 	  catch(...){
 	    std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
@@ -921,7 +804,7 @@ TLorentzVector BaseEventSelector::correctJet(const pat::Jet & jet, edm::EventBas
     return jetP4;
 }
 
-pat::Jet BaseEventSelector::correctJetReturnPatJet(const pat::Jet & jet, edm::EventBase const & event, bool doAK8Corr, bool forceCorr, unsigned int syst,int run, bool doEraDepJEC)
+pat::Jet BaseEventSelector::correctJetReturnPatJet(const pat::Jet & jet, edm::EventBase const & event, bool doAK8Corr, bool forceCorr, unsigned int syst)
 {
 
   // JES and JES systematics
@@ -930,27 +813,6 @@ pat::Jet BaseEventSelector::correctJetReturnPatJet(const pat::Jet & jet, edm::Ev
         correctedJet = jet.correctedJet(0);                 //copy original jet
     else
         correctedJet = jet;                                 //copy default corrected jet
-
-    //get corrector based on run era
-    FactorizedJetCorrector *tmpJetCorrector;
-    if(!doEraDepJEC) tmpJetCorrector = JetCorrector; //do regular if not era dependent
-    else{ //check run info
-      if(run >=1 && run <=276811) tmpJetCorrector = JetCorrector2016BCD; //bcd
-      else if( run >=276831 && run <=278801) tmpJetCorrector = JetCorrector2016EF; //e/f-early
-      else if( run >=278802 && run <=280385) tmpJetCorrector = JetCorrector2016G; //f-late/g
-      else if(run>=280919) tmpJetCorrector=JetCorrector2016H; // h - use else if so that it will hopefully crash if run is not in one of these ranges
-      
-    }
-    //get corrector based on run era - AK8
-    FactorizedJetCorrector *tmpJetCorrectorAK8;
-    if(!doEraDepJEC) tmpJetCorrectorAK8 = JetCorrectorAK8; //do regular if not era dependent
-    else{ //check run info
-      if(run >=1 && run <=276811) tmpJetCorrectorAK8 = JetCorrectorAK82016BCD; //bcd
-      else if( run >=276831 && run <=278801) tmpJetCorrectorAK8 = JetCorrectorAK82016EF; //e/f-early
-      else if( run >=278802 && run <=280385) tmpJetCorrectorAK8 = JetCorrectorAK82016G; //f-late/g
-      else if(run>=280919) tmpJetCorrectorAK8=JetCorrectorAK82016H; // h - use else if so that it will hopefully crash if run is not in one of these ranges
-      
-    }
 
     double ptscale = 1.0;
     double unc = 1.0;
@@ -970,13 +832,13 @@ pat::Jet BaseEventSelector::correctJetReturnPatJet(const pat::Jet & jet, edm::Ev
       	    double pt_raw = jet.correctedJet(0).pt();
 
 	    if (doAK8Corr){
-                tmpJetCorrectorAK8->setJetEta(jet.eta());
-          	tmpJetCorrectorAK8->setJetPt(pt_raw);
-                tmpJetCorrectorAK8->setJetA(jet.jetArea());
-          	tmpJetCorrectorAK8->setRho(rho); 
+                JetCorrectorAK8->setJetEta(jet.eta());
+          	JetCorrectorAK8->setJetPt(pt_raw);
+                JetCorrectorAK8->setJetA(jet.jetArea());
+          	JetCorrectorAK8->setRho(rho); 
     
                 try{
-    		    correction = tmpJetCorrectorAK8->getCorrection();
+    		    correction = JetCorrectorAK8->getCorrection();
                 }
           	catch(...){
     		    std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
@@ -986,13 +848,13 @@ pat::Jet BaseEventSelector::correctJetReturnPatJet(const pat::Jet & jet, edm::Ev
 	    }
 
 	    else{
-                tmpJetCorrector->setJetEta(jet.eta());
-          	tmpJetCorrector->setJetPt(pt_raw);
-                tmpJetCorrector->setJetA(jet.jetArea());
-          	tmpJetCorrector->setRho(rho); 
+                JetCorrector->setJetEta(jet.eta());
+          	JetCorrector->setJetPt(pt_raw);
+                JetCorrector->setJetA(jet.jetArea());
+          	JetCorrector->setRho(rho); 
     
                 try{
-    		    correction = tmpJetCorrector->getCorrection();
+    		    correction = JetCorrector->getCorrection();
                 }
           	catch(...){
     		    std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
@@ -1082,13 +944,13 @@ pat::Jet BaseEventSelector::correctJetReturnPatJet(const pat::Jet & jet, edm::Ev
             // We need to undo the default corrections and then apply the new ones
 
 	  if (doAK8Corr){
-	    tmpJetCorrectorAK8->setJetEta(jet.eta());
-	    tmpJetCorrectorAK8->setJetPt(pt_raw);
-	    tmpJetCorrectorAK8->setJetA(jet.jetArea());
-	    tmpJetCorrectorAK8->setRho(rho); 
+	    JetCorrectorAK8->setJetEta(jet.eta());
+	    JetCorrectorAK8->setJetPt(pt_raw);
+	    JetCorrectorAK8->setJetA(jet.jetArea());
+	    JetCorrectorAK8->setRho(rho); 
 	    
 	    try{
-	      correction = tmpJetCorrectorAK8->getCorrection();
+	      correction = JetCorrectorAK8->getCorrection();
 	    }
 	    catch(...){
 	      std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
@@ -1098,13 +960,13 @@ pat::Jet BaseEventSelector::correctJetReturnPatJet(const pat::Jet & jet, edm::Ev
 	  }
 
 	  else{
-            tmpJetCorrector->setJetEta(jet.eta());
-            tmpJetCorrector->setJetPt(pt_raw);
-            tmpJetCorrector->setJetA(jet.jetArea());
-            tmpJetCorrector->setRho(rho); 
+            JetCorrector->setJetEta(jet.eta());
+            JetCorrector->setJetPt(pt_raw);
+            JetCorrector->setJetA(jet.jetArea());
+            JetCorrector->setRho(rho); 
 	    
 	    try{
-	      correction = tmpJetCorrector->getCorrection();
+	      correction = JetCorrector->getCorrection();
 	    }
 	    catch(...){
 	      std::cout << mLegend << "WARNING! Exception thrown by JetCorrectionUncertainty!" << std::endl;
