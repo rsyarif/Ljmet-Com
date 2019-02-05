@@ -194,8 +194,6 @@ void DileptonEventSelector::BeginJob( std::map<std::string, edm::ParameterSet co
 	mbPar["doLepJetCleaning"]         = par[_key].getParameter<bool>         ("doLepJetCleaning");
         mbPar["doNewJEC"]                 = par[_key].getParameter<bool>         ("doNewJEC");
 	mbPar["isMc"]                     = par[_key].getParameter<bool>         ("isMc");
-        if (par[_key].exists("doEraDepJEC")) mbPar["doEraDepJEC"] = par[_key].getParameter<bool> ("doEraDepJEC");
-        else mbPar["doEraDepJEC"] = false;
 
 	//mva value
 	mbPar["UseElMVA"]                 = par[_key].getParameter<bool>         ("UseElMVA");
@@ -720,16 +718,6 @@ passCut(ret,"Bad Charged Hadron");
 	    bool pass = false;
 	    bool passLoose=false;
 	    while(1){
-	      //do kinematic selection first
-	      // electron Et cut
-	      if (_iel->pt()>mdPar["electron_minpt"]){ }
-	      else break;
-              
-	      // electron eta cut
-	      if ( fabs(_iel->eta())<mdPar["electron_maxeta"] ){ }
-	      else break;
-
-
 	      if (not _iel->gsfTrack().isNonnull() or not _iel->gsfTrack().isAvailable()) break;
 	      //skip if in barrel-endcap gap; doing it here means I never have to worry about it downstream since both electrons for analysis and those for cleaning are made here
 	      if( fabs(_iel->ecalDrivenMomentum().eta())>1.442 && fabs(_iel->ecalDrivenMomentum().eta())<1.556) break;
@@ -831,6 +819,13 @@ passCut(ret,"Bad Charged Hadron");
 		  else passLoose=true;
 		}
 		*/
+	      // electron Et cut
+	      if (_iel->pt()>mdPar["electron_minpt"]){ }
+	      else break;
+              
+	      // electron eta cut
+	      if ( fabs(_iel->eta())<mdPar["electron_maxeta"] ){ }
+	      else break;
               
 	      pass = true;
 	      break;
@@ -878,8 +873,7 @@ passCut(ret,"Bad Charged Hadron");
         mvSelJets.clear();
 	mvSelJetsCleaned.clear();
         mvAllJets.clear();
-	//get run for jet energy collections
-	int run = event.id().run();
+        
         event.getByLabel( mtPar["jet_collection"], mhJets );
         for (std::vector<pat::Jet>::const_iterator _ijet = mhJets->begin();
              _ijet != mhJets->end(); ++_ijet){
@@ -889,7 +883,7 @@ passCut(ret,"Bad Charged Hadron");
             if ( (*jetSel_)( *_ijet, retJet ) ){ 
                 mvAllJets.push_back(edm::Ptr<pat::Jet>(mhJets, _n_jets)); 		
 		//cut on corrected jet quantities
-		TLorentzVector corJetP4 = correctJet(*_ijet,event,false,false,0,run,mbPar["doEraJEC"]);
+		TLorentzVector corJetP4 = correctJet(*_ijet,event);
                 if (( corJetP4.Pt()>mdPar["jet_minpt"] ) && ( fabs(corJetP4.Eta())<mdPar["jet_maxeta"] )){ 
                     ++_n_good_uncleaned_jets;
                     mvSelJets.push_back(edm::Ptr<pat::Jet>(mhJets, _n_jets)); 
@@ -1011,7 +1005,7 @@ passCut(ret,"Bad Charged Hadron");
 
 	      //if not cleaned just use first jet (remember if no cleaning then cleanedJet==*_ijet) to get corrected four std::vector and set the cleaned jet to have it
 	      if (!_cleaned) {
-		jetP4 = correctJet(cleanedJet, event,false,false,0,run,mbPar["doEraJEC"]);
+		jetP4 = correctJet(cleanedJet, event);
 		//annoying thing to convert our tlorentzstd::vector to root::math::lorentzstd::vector
 		ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double > > rlv;
 		rlv.SetXYZT(jetP4.X(),jetP4.Y(),jetP4.Z(),jetP4.T());
@@ -1019,7 +1013,7 @@ passCut(ret,"Bad Charged Hadron");
 	      }
 	      else{
 		//get the correct 4std::vector
-		jetP4 = correctJet(tmpJet, event,false,false,0,run,mbPar["doEraJEC"]);
+		jetP4 = correctJet(tmpJet, event);
 		//annoying thing to convert our tlorentzstd::vector to root::math::lorentzstd::vector
 		ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double > > rlv;
 		rlv.SetXYZT(jetP4.X(),jetP4.Y(),jetP4.Z(),jetP4.T());
