@@ -15,7 +15,7 @@ relBase = os.environ['CMSSW_BASE']
 
 JetSubCalc = cms.PSet(
                       slimmedJetColl     = cms.InputTag("slimmedJets"),
-                      slimmedJetsAK8Coll = cms.InputTag("slimmedJetsAK8"),
+                      slimmedJetsAK8Coll = cms.InputTag("packedJetsAK8Puppi"),
                       bDiscriminant      = cms.string("pfDeepCSVJetTags:probb"),
                       genParticles       = cms.InputTag("prunedGenParticles"),
                       kappa              = cms.double(0.5),

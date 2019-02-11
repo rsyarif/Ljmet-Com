@@ -18,6 +18,16 @@ sampleList=[
 	'TprimeTprime_M-1700_TuneCP5_13TeV-madgraph-pythia8.txt', 
 	'TprimeTprime_M-1800_TuneCP5_13TeV-madgraph-pythia8.txt', 
 
+	'BprimeBprime_M-1000_TuneCP5_13TeV-madgraph-pythia8.txt',
+	'BprimeBprime_M-1100_TuneCP5_13TeV-madgraph-pythia8.txt',
+	'BprimeBprime_M-1200_TuneCP5_13TeV-madgraph-pythia8.txt',
+	'BprimeBprime_M-1300_TuneCP5_13TeV-madgraph-pythia8.txt',
+	'BprimeBprime_M-1400_TuneCP5_13TeV-madgraph-pythia8.txt',
+	'BprimeBprime_M-1500_TuneCP5_13TeV-madgraph-pythia8.txt',
+	'BprimeBprime_M-1600_TuneCP5_13TeV-madgraph-pythia8.txt',
+	'BprimeBprime_M-1800_TuneCP5_13TeV-madgraph-pythia8.txt',
+
+
 	###BKG:
 	'WW_TuneCP5_13TeV-pythia8.txt',
 	'WZTo3LNu_13TeV-powheg-pythia8.txt',
@@ -62,7 +72,8 @@ outdir = 'LJMet94x_3lepTT_2017datasets_'+date+'_rizki'
 
 for sample in sampleList:
 	accessor = 'cmsxrootd.fnal.gov'
-	os.system('python condor_submit.py --useMC True --sample '+sample.split('.')[0]+' --fileList '+thisDir+'fileLists_Nov2-2018/'+sample+' --submit True --inputTar '+tarfile+' --outDir /eos/uscms/store/user/lpcljm/'+outdir+' --shift '+shift+' --accessor '+accessor)
+	if 'prime' in sample: NewPDF = True
+	os.system('python condor_submit.py --useMC True --sample '+sample.split('.')[0]+' --fileList '+thisDir+'fileLists_Nov2-2018/'+sample+' --submit True --inputTar '+tarfile+' --outDir /eos/uscms/store/user/lpcljm/'+outdir+' --shift '+shift+' --accessor '+accessor+' --newpdf '+str(NewPDF))
 
 ## shift should be (one at a time): nominal, JECup, JECdown, JERup, JERdown
 ## If you want to use different directory names, edit lines 144 - 147 in condor_submit.py so the config is edited correctly

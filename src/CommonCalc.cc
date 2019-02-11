@@ -100,8 +100,29 @@ int CommonCalc::AnalyzeEvent(edm::EventBase const & event,
   SetValue("lumi",  iLumi);
   SetValue("run",   iRun);
   
-  
-  
+  //
+  // _____ L1 Prefiring weights _____
+  //
+  edm::Handle<double> nonPrefiringProb;
+  edm::Handle<double> nonPrefiringProbUp;
+  edm::Handle<double> nonPrefiringProbDown;
+  double L1NonPrefiringProb = 1.0;
+  double L1NonPrefiringProbUp = 1.0;
+  double L1NonPrefiringProbDown = 1.0;
+  if(event.getByLabel(edm::InputTag("prefiringweight","NonPrefiringProb") , nonPrefiringProb)){
+    L1NonPrefiringProb = *nonPrefiringProb;
+  }
+  if(event.getByLabel(edm::InputTag("prefiringweight","NonPrefiringProbUp") , nonPrefiringProbUp)){
+    L1NonPrefiringProbUp = *nonPrefiringProbUp;
+  }
+  if(event.getByLabel(edm::InputTag("prefiringweight","NonPrefiringProbDown") , nonPrefiringProbDown)){
+    L1NonPrefiringProbDown = *nonPrefiringProbDown;
+  }
+
+  SetValue("L1NonPrefiringProb",L1NonPrefiringProb);
+  SetValue("L1NonPrefiringProbUp",L1NonPrefiringProbUp);
+  SetValue("L1NonPrefiringProbDown",L1NonPrefiringProbDown);
+
   //
   // _____ Get objects from the selector _____________________
   //

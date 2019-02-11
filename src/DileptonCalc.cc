@@ -391,15 +391,19 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
     std::vector <double> elOoemoop;
     std::vector <int>    elMHits;
     std::vector <int>    elVtxFitConv;
-    std::vector<double>  elMVA;
 
-    //mva stuff - added by bjorn
     std::vector <double> elMVAValue;
-    //std::vector <double> elMVAValue_iso;
-    std::vector <double> elIsMVATight;
+    std::vector <double> elIsMVATight90;
+    std::vector <double> elIsMVATight80;
     std::vector <double> elIsMVALoose;
-    //std::vector <double> elIsMVATightIso;
-    //std::vector <double> elIsMVALooseIso;
+    std::vector <double> elMVAValue_iso;
+    std::vector <double> elIsMVATightIso90;
+    std::vector <double> elIsMVATightIso80;
+    std::vector <double> elIsMVALooseIso;
+    std::vector <double> elIsTight;
+    std::vector <double> elIsMedium;
+    std::vector <double> elIsLoose;
+    std::vector <double> elIsVeto;
 
     //mva VID
     //std::vector<double>  elMVAValVID;
@@ -619,8 +623,6 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
 	elOoemoop.push_back(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy());
 	elMHits.push_back((*iel)->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS));
 	elVtxFitConv.push_back((*iel)->passConversionVeto());
-        //add mva
-	elMVA.push_back( selector->mvaValue( *(iel->get()), event) );
 
 	//add miniIso
 	elMiniIsoEA.push_back(getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate *>(iel->get()),0.05, 0.2, 10., false, false,myRhoJetsNC));
@@ -677,24 +679,24 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
 	  }
 	*/
         if (UseElMVA) {
-            elMVAValue.push_back( selector->mvaValue(iel->operator*(),event) );
-	  bool mvapass = 0;
-	  bool mvapassloose = 0;
-	  if ( fabs((*iel)->superCluster()->eta())<=0.8){
-	    mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(0) - tightElMVA.at(2)*exp(-1*(*iel)->pt()/tightElMVA.at(1)));
-	    mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(0);
-	  }
-	  else if ( fabs((*iel)->superCluster()->eta())<=1.479){
-	    mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(3) - tightElMVA.at(5)*exp(-1*(*iel)->pt()/tightElMVA.at(4)));
-	    mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(1);
-	  }
-	  else{
-	    mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(6) - tightElMVA.at(8)*exp(-1*(*iel)->pt()/tightElMVA.at(7)));
-	    mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(2);
-	  }
-	  elIsMVATight.push_back(mvapass);
-	  elIsMVALoose.push_back(mvapassloose);
+	  // bare minimum! See singleLepCalc for more IDs and usingV2
+        elIsMVATight80.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wp80"));
+        elIsMVATight90.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wp90"));
+        elIsMVALoose.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wpLoose"));
+        elMVAValue.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV2Values"));
+
+        elIsMVATightIso80.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wp80"));
+        elIsMVATightIso90.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wp90"));
+        elIsMVALooseIso.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wpLoose"));
+        elMVAValue_iso.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values"));
         }
+
+      elIsTight.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-tight"));
+      elIsMedium.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-medium"));
+      elIsLoose.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-loose"));
+      elIsVeto.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-veto"));
+
+
 
 	if(isMc && keepFullMChistory){
 	  //cout << "start\n";
@@ -787,19 +789,26 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
     SetValue("elOoemoop", elOoemoop);
     SetValue("elMHits", elMHits);
     SetValue("elVtxFitConv", elVtxFitConv);
-    SetValue("elMVA",elMVA);
     //SetValue("elMVAValVID",elMVAValVID);
     //SetValue("elMVATightVID",elMVATightVID);
     //SetValue("elMVALooseVID",elMVALooseVID);
 
 
-    //MVA stuff - bjorn
     SetValue("elMVAValue", elMVAValue);
-    //SetValue("elMVAValue_iso", elMVAValue_iso);
-    SetValue("elIsMVATight", elIsMVATight);
+    SetValue("elIsMVATight90", elIsMVATight90);
+    SetValue("elIsMVATight80", elIsMVATight80);
     SetValue("elIsMVALoose", elIsMVALoose);
-    //SetValue("elIsMVATightIso",elIsMVATightIso);
-    //SetValue("elIsMVALooseIso",elIsMVALooseIso);
+
+    SetValue("elMVAValue_iso", elMVAValue_iso);
+    SetValue("elIsMVATightIso90",elIsMVATightIso90);
+    SetValue("elIsMVATightIso80",elIsMVATightIso80);
+    SetValue("elIsMVALooseIso",elIsMVALooseIso);
+
+    SetValue("elIsTight", elIsTight);
+    SetValue("elIsMedium", elIsMedium);
+    SetValue("elIsLoose", elIsLoose);
+    SetValue("elIsVeto", elIsVeto);
+
 
     //Extra info about isolation
     SetValue("elChIso" , elChIso);

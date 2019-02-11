@@ -14,7 +14,7 @@ files_per_job = 10
 #Configuration options parsed from arguments
 #Switching to getopt for compatibility with older python
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["useMC=", "sample=","fileList=", "outDir=","shift=","submit=","json=","inputTar=","saveGenHT=","accessor="])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["useMC=", "sample=","fileList=", "outDir=","shift=","submit=","json=","inputTar=","saveGenHT=","newpdf=","accessor="])
 except getopt.GetoptError as err:
     print str(err)
     sys.exit(1)
@@ -29,6 +29,7 @@ submit   = bool(False)
 changeJEC= bool(False)
 tarfile  = str('None')
 saveGHT  = bool(False)
+newpdf   = str('False')
 accessor = str('None')
 
 for o, a in opts:
@@ -47,6 +48,7 @@ for o, a in opts:
     elif o == "--inputTar": tarfile = str(a).split('.')[0]
     elif o == "--json":     json   = str(a)
     elif o == "--saveGenHT": saveGHT = bool(a)
+    elif o == "--newpdf": newpdf = str(a)
     elif o == "--accessor": accessor = str(a)
     elif o == "--submit":
         if a == 'True':     submit = True
@@ -153,13 +155,15 @@ while ( nfiles <= count ):
         line=line.replace('CONDOR_JSON',     json)
         line=line.replace('CONDOR_FILELIST', singleFileList)
         line=line.replace('CONDOR_OUTFILE',  prefix+'_'+str(j))
-#         line=line.replace('SAVEGENHT',  saveGHT)
+        line=line.replace('SAVEGENHT',  saveGHT)
+        line=line.replace('NEWPDF',  newpdf)
         if 'JECup' in shift  and 'JECup' in line: line=line.replace('False',  'True')
         if 'JECdown' in shift and 'JECdown' in line: line=line.replace('False',  'True')
         if 'JERup' in shift and 'JERup' in line: line=line.replace('False',  'True')
         if 'JERdown' in shift and 'JERdown' in line: line=line.replace('False',  'True')
         py_file.write(line)
     py_file.close()
+    py_templ_file.close()
 
     jdl_templ_file = open(relBase+'/src/LJMet/Com/condor_TTtrilep/template.jdl')
     jdl_file       = open(tempdir+'/'+prefix+'_'+str(j)+'.jdl','w')
@@ -174,10 +178,10 @@ while ( nfiles <= count ):
         jdl_file.write(line)
 
     jdl_file.close()
+    jdl_templ_file.close()
 
     j = j + 1
     nfiles = nfiles + files_per_job
-    py_templ_file.close()
 
 njobs = j - 1
 
