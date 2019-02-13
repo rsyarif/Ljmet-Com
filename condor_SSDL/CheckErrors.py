@@ -48,9 +48,10 @@ All_cuts = 0
 root_not_found = {}
 
 for folder in folders:
-# 	if 'TprimeTprime_M-1400' not in folder: continue
-# 	if 'DoubleMuon_RRB' not in folder: continue
-# 	if 'ZZ' not in folder: continue
+# 	if 'Mu' in folder: continue
+# 	if 'EG' in folder: continue
+	if 'DY' in folder: continue
+# 	if 'Mu' not in folder and 'EG' not in folder: continue
 	if verbose_level > 0:  
 		print
 		print folder
