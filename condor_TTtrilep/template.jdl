@@ -5,7 +5,7 @@ Requirements   =  OpSys == "LINUX" && (Arch =="INTEL" || Arch =="x86_64")
 request_memory = 2100
 Should_Transfer_Files = YES
 WhenToTransferOutput = ON_EXIT
-Transfer_Input_Files = PREFIX_JOBID.py, PREFIX.sh
+Transfer_Input_Files = PREFIX_JOBID.py, PREFIX.sh, producer_PREFIX_JOBID.py
 Output = PREFIX_JOBID.out
 Error  = PREFIX_JOBID.err
 Log    = PREFIX_JOBID.condor

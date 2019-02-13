@@ -45,15 +45,25 @@ rm -rvf ${INPUTTAR}
 echo "compiling 'scram b'"
 scram b 
 
-#scram b ProjectRename --> not used. old recipe.
 
 echo "executing 'cmsenv'"
 eval `scramv1 runtime -sh`
 
 cd -
 
+echo "Running producer"
+cmsRun producer_${PREFIX}_${JOBID}.py
+
+echo "Sleeping for one minute..."
+sleep 60
+
+
 sed -i "s|CONDOR_RELBASE|$PWD/$INPUTTAR|" ${PREFIX}_${JOBID}.py
 ljmet ${PREFIX}_${JOBID}.py
+
+echo "Deleting the mediator MiniAOD file"
+rm mediator*.root
+
 
 # copy output to eos
 echo "xrdcp .root output for condor"

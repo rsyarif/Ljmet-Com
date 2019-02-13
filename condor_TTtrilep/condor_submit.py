@@ -1,5 +1,5 @@
 #!/usr/bin/python
-execfile("/uscms_data/d3/rsyarif/Brown2018/TT_BB_trilepton_LJMET_2017data/CMSSW_9_4_11/src/LJMet/Com/condor_TTtrilep/EOSSafeUtils.py")
+execfile("/uscms_data/d3/rsyarif/Brown2018/TT_BB_trilepton_LJMET_2017data/CMSSW_9_4_12/src/LJMet/Com/condor_TTtrilep/eos_utils/EOSSafeUtils.py")
 
 import os
 import re
@@ -14,7 +14,7 @@ files_per_job = 10
 #Configuration options parsed from arguments
 #Switching to getopt for compatibility with older python
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["useMC=", "sample=","fileList=", "outDir=","shift=","submit=","json=","inputTar=","saveGenHT=","newpdf=","accessor="])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["useMC=", "sample=","fileList=", "outDir=","shift=","submit=","json=","inputTar=","saveGenHT=","newpdf=","isTTbar=","accessor="])
 except getopt.GetoptError as err:
     print str(err)
     sys.exit(1)
@@ -28,8 +28,9 @@ json     = str('None')
 submit   = bool(False)
 changeJEC= bool(False)
 tarfile  = str('None')
-saveGHT  = bool(False)
+saveGHT  = str('False')
 newpdf   = str('False')
+isTTbar  = str('False')
 accessor = str('None')
 
 for o, a in opts:
@@ -47,8 +48,9 @@ for o, a in opts:
     elif o == "--shift":    shift    = str(a)
     elif o == "--inputTar": tarfile = str(a).split('.')[0]
     elif o == "--json":     json   = str(a)
-    elif o == "--saveGenHT": saveGHT = bool(a)
+    elif o == "--saveGenHT": saveGHT = str(a)
     elif o == "--newpdf": newpdf = str(a)
+    elif o == "--isTTbar": isTTbar = str(a)
     elif o == "--accessor": accessor = str(a)
     elif o == "--submit":
         if a == 'True':     submit = True
@@ -124,9 +126,9 @@ j = 1
 nfiles = 1
 
 tempdir = '/uscms_data/d3/rsyarif/Brown2018/TT_BB_trilepton_LJMET_2017data/'+outputdir.split('/')[-1]+'_logs/'+shift+'/'+prefix
-os.makedirs(tempdir)
-
-py_file = open(tempdir+"/"+prefix+"_"+str(j)+".py","w")
+if not os.path.exists(tempdir): os.makedirs(tempdir)
+else:
+	print 'Folder exists. Maybe delete first? : ',tempdir
 
 print 'CONDOR work dir: '+tempdir
 
@@ -138,22 +140,36 @@ for line in file_list:
 
 file_list.close()
 
-os.system('sed -e \'s/SETUP/'+setupString+'/g\' template.sh > '+tempdir+'/'+prefix+'.sh')
+# only produce the miniAOD for nominal (implementation NOT COMPLETE) need to create template_no_producer.sh etc - Feb 11, 2019
+if shift == 'nominal': os.system('sed -e \'s/SETUP/'+setupString+'/g\' template.sh > '+tempdir+'/'+prefix+'.sh')
+else: 
+	os.system('sed -e \'s/SETUP/'+setupString+'/g\' template_no_producer.sh > '+tempdir+'/'+prefix+'.sh')
+	mediatorFile = singleFileList # if bypassing producer. but this needs to be tested. NOT tested yet! - Feb 11, 2019
 
 while ( nfiles <= count ):
 
     # ADD YOUR CONFIG FILE HERE!!
-    py_templ_file = open(relBase+'/src/LJMet/Com/condor_TTtrilep/ljmet_cfg.py')
-
-    py_file = open(tempdir+'/'+prefix+'_'+str(j)+'.py','w')
-
-    #Avoid calling the get_input function once per line in template
+    # Avoid calling the get_input function once per line in template
     singleFileList = get_input(nfiles, files)
+    mediatorFile = 'mediator_'+prefix+'_'+str(j)+'.root'
 
+    producer_templ_file = open(relBase+'/src/LJMet/Com/condor_TTtrilep/producer_template_cfg.py')
+    producer_file = open(tempdir+'/producer_'+prefix+'_'+str(j)+'.py','w')
+    for line in producer_templ_file:
+        line=line.replace('CONDOR_FILELIST', singleFileList)
+        line=line.replace('CONDOR_ISMC', useMC)
+        line=line.replace('CONDOR_ISTTBAR', isTTbar)
+        line=line.replace('CONDOR_MEDIATOR', mediatorFile)
+        producer_file.write(line)
+    producer_file.close()
+    producer_templ_file.close()
+
+    py_templ_file = open(relBase+'/src/LJMet/Com/condor_TTtrilep/ljmet_cfg.py')
+    py_file = open(tempdir+'/'+prefix+'_'+str(j)+'.py','w')
     for line in py_templ_file:
         line=line.replace('CONDOR_ISMC',     useMC)
         line=line.replace('CONDOR_JSON',     json)
-        line=line.replace('CONDOR_FILELIST', singleFileList)
+        line=line.replace('CONDOR_MEDIATOR', mediatorFile)
         line=line.replace('CONDOR_OUTFILE',  prefix+'_'+str(j))
         line=line.replace('SAVEGENHT',  saveGHT)
         line=line.replace('NEWPDF',  newpdf)
@@ -189,11 +205,11 @@ if (submit):
     savedPath = os.getcwd()
     os.chdir(tempdir)
     print 'Submitting',njobs,'jobs!'
-    proc = subprocess.Popen(['condor_submit', prefix+'_1.jdl'], stdout=subprocess.PIPE)
-    (out, err) = proc.communicate()
-    if len(out) > 0: print "condor output:", out
+    #proc = subprocess.Popen(['condor_submit', prefix+'_1.jdl'], stdout=subprocess.PIPE) 
+    #(out, err) = proc.communicate()
+    #if len(out) > 0: print "condor output:", out
 
-    for k in range(2,njobs+1):
+    for k in range(1,njobs+1):
         os.system('condor_submit '+prefix+'_'+str(k)+'.jdl')
         os.system('sleep 0.5')
 

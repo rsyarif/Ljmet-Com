@@ -260,6 +260,7 @@ process.event_selector = cms.PSet(
     )
 
 
+
 #######################################################
 #
 # Input files
@@ -269,7 +270,7 @@ process.inputs = cms.PSet (
     nEvents    = cms.int32(-1),
     skipEvents = cms.int32(0),
     lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange()),
-    fileNames  = cms.vstring(CONDOR_FILELIST)
+    fileNames  = cms.vstring('CONDOR_MEDIATOR')
     )
 
 

@@ -269,7 +269,7 @@ process.inputs = cms.PSet (
     skipEvents = cms.int32(0),
     lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange()),
     fileNames  = cms.vstring(
-		'root://cmsxrootd.fnal.gov//store/data/Run2017F/DoubleEG/MINIAOD/09May2018-v1/10000/444E03EB-B75F-E811-AFBA-F01FAFD8F16A.root',
+		'test_producer_mediator_DoubleEG_Run2017F.root',
 		)
 
     )
