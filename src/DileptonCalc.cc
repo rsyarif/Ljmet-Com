@@ -340,7 +340,6 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
 
 
 	  //control triggers - mu
-	  if(Path.find("HLT_Mu17_v")!=std::string::npos) HLT_Mu17=true;
 	  if(Path.find("HLT_Mu8_v")!=std::string::npos) HLT_Mu8=true;
 	  if(Path.find("HLT_Mu17_v")!=std::string::npos) HLT_Mu17=true;
 	  if(Path.find("HLT_Mu19_v")!=std::string::npos) HLT_Mu19=true;
