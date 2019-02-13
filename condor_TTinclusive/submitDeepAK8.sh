@@ -22,6 +22,5 @@ python -u condor_submitData2017.py nominal
 # echo "SUBMITTING LJMET -- JERdown"
 # cp TTsinglelep_MC_cfg.py ljmet_cfg.py
 # python -u condor_submitMC2017.py JERdown
->>>>>>> remotes/cms-ljmet/CMSSW_9_4_X
 
 echo "DONE"
