@@ -129,7 +129,7 @@ process.event_selector = cms.PSet(
     'HLT_Mu8_TrkIsoVVL_v',
     'HLT_Mu17_TrkIsoVVL_v',
     'HLT_Mu19_TrkIsoVVL_v',
-    'HLT_Mu3_PFJet40_v12',
+    'HLT_Mu3_PFJet40_v',
     ),
 
     pv_cut                   = cms.bool(True),
