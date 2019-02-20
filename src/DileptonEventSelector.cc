@@ -811,93 +811,8 @@ passCut(ret,"Bad Charged Hadron");
 		}
 		if (miniIso > 0.4) passLoose = false;
 	      }
-/*
-	      if ( mbPar["UseElMVA"] ) {
-	      //bool mvapass = True; HACK FOR TESTING MVA EFFICIENCY
-	      bool mvapass = false;
-	      if ( fabs(_iel->superCluster()->eta())<=0.8){
-		mvapass = mvaValue( *_iel, event) > (mvdPar["tight_electron_mva_cuts"].at(0) - mvdPar["tight_electron_mva_cuts"].at(2)*exp(-1*_iel->pt()/mvdPar["tight_electron_mva_cuts"].at(1)));
-	      }
-	      else if ( fabs(_iel->superCluster()->eta())<=1.479 && fabs(_iel->superCluster()->eta())>0.8){
-		mvapass = mvaValue( *_iel, event) > (mvdPar["tight_electron_mva_cuts"].at(3) - mvdPar["tight_electron_mva_cuts"].at(5)*exp(-1*_iel->pt()/mvdPar["tight_electron_mva_cuts"].at(4)));
-	      }
-	      else{
-		mvapass = mvaValue( *_iel, event) > (mvdPar["tight_electron_mva_cuts"].at(6) - mvdPar["tight_electron_mva_cuts"].at(8)*exp(-1*_iel->pt()/mvdPar["tight_electron_mva_cuts"].at(7)));
-	      }
-	      if (!mvapass) break;
-		      
-	      if(mbPar["electron_useMiniIso"]){
-		bool passIso = false;
-		pat::Electron* elptr = new pat::Electron(*_iel);
-		float miniIso = getPFMiniIsolation_EffectiveArea(packedPFCands, dynamic_cast<const reco::Candidate* > (elptr), 0.05, 0.2, 10., false, false,myRhoJetsNC);
-			
-		if(miniIso < mdPar["electron_miniIso"]) passIso = true;                      
-		if(!passIso){delete elptr;  break;}
-		delete elptr;
-	      }
-*/
-	      /* NOT USING CUT BASED LOOSE ANYMORE
-	      //get effective area to do pu correction for iso
-	      double AEff;
-	      if( fabs(_iel->ecalDrivenMomentum().eta())<1.0) AEff=0.1752;
-	      else if(fabs(_iel->ecalDrivenMomentum().eta())<1.479) AEff=0.1862;
-	      else if(fabs(_iel->ecalDrivenMomentum().eta())<2.0) AEff=0.1411;
-	      else if(fabs(_iel->ecalDrivenMomentum().eta())<2.2) AEff=0.1534;
-	      else if(fabs(_iel->ecalDrivenMomentum().eta())<2.3) AEff=0.1903;
-	      else if(fabs(_iel->ecalDrivenMomentum().eta())<2.4) AEff=0.2243;
-	      else if(fabs(_iel->ecalDrivenMomentum().eta())<2.5) AEff=0.2687;
-	      
-	      //calculate relIso
-	      reco::GsfElectron::PflowIsolationVariables pfIso = _iel->pfIsolationVariables();
-	      double chIso = pfIso.sumChargedHadronPt;
-	      double nhIso = pfIso.sumNeutralHadronEt;
-	      double phIso = pfIso.sumPhotonEt;
-	      double PUIso = pfIso.sumPUPt;
-	      double relIso = ( chIso + std::max(0.0, nhIso + phIso - rhoIso*AEff) ) / _iel->pt();
-	      
-	      //get d0 and dZ
-	      double d0=_iel->dB();
-	      double dZ;
-	      if(goodPVs.size() > 0){
-		dZ=_iel->gsfTrack()->dz(goodPVs.at(0).position());
-	      } 
-	      else {dZ=-999;}
-	      //get 1/e -1/1p
-	      float ooEmooP = 1.0/_iel->ecalEnergy() - _iel->eSuperClusterOverP()/_iel->ecalEnergy();
 
-
-
-		if(fabs(_iel->ecalDrivenMomentum().eta()) <= 1.479){
-		  if(_iel->full5x5_sigmaIetaIeta() >= 0.0103) {passLoose= false; }
-		  else if(fabs(_iel->deltaEtaSuperClusterTrackAtVtx()) >= 0.0105)    {passLoose= false; }
-		  else if(fabs(_iel->deltaPhiSuperClusterTrackAtVtx()) >= 0.115)    {passLoose= false; }
-		  else if(_iel->hcalOverEcal() >= 0.104)         {passLoose= false; }
-		  else if(relIso >= 0.0893)          {passLoose= false; }
-		  else if(ooEmooP >= 0.102) {passLoose= false; }
-		  else if(fabs(d0) >= 0.0261)      {passLoose= false; }
-		  else if(fabs(dZ) >= 0.41)     {passLoose= false; }
-		  else if(_iel->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS) > 2)              {passLoose= false; }
-		  else if(_iel->isGsfCtfScPixChargeConsistent() < 1)  {passLoose= false; }
-		  else if(!_iel->passConversionVeto())        {passLoose= false; }
-		  else passLoose=true;
-		}
-		
-		//Endcap
-		else{
-		  if(_iel->full5x5_sigmaIetaIeta() >= 0.0301)  {passLoose= false; }
-		  else if(fabs(_iel->deltaEtaSuperClusterTrackAtVtx()) >= 0.00814)    {passLoose= false; }
-		  else if(fabs(_iel->deltaPhiSuperClusterTrackAtVtx()) >= 0.182)    {passLoose= false; }
-		  else if(_iel->hcalOverEcal() >= 0.0897)        {passLoose= false; }
-		  else if(relIso >= 0.121)        {passLoose= false; }
-		  else if(ooEmooP >= 0.126) {passLoose= false; }
-		  else if(fabs(d0) >= 0.118)       {passLoose= false; }
-		  else if(fabs(dZ) >= 0.822)      {passLoose= false; }
-		  else if(_iel->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS) > 1)              {passLoose= false; }
-		  else if(_iel->isGsfCtfScPixChargeConsistent() < 1)  {passLoose= false; }
-		  else if(!_iel->passConversionVeto())        {passLoose= false; }
-		  else passLoose=true;
-		}
-		*/
+        delete elptr;
               
 	      pass = true;
 	      break;
@@ -1036,6 +951,8 @@ passCut(ret,"Bad Charged Hadron");
 		   		 
 		  }//end loop over jet constituents
 		}//end check of muons being inside jet
+
+        delete muptr;
 	      }// end loop over muons for cleaning
 	      	    
 	      
