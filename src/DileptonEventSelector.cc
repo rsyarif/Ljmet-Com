@@ -194,8 +194,6 @@ void DileptonEventSelector::BeginJob( std::map<std::string, edm::ParameterSet co
 	mbPar["doLepJetCleaning"]         = par[_key].getParameter<bool>         ("doLepJetCleaning");
         mbPar["doNewJEC"]                 = par[_key].getParameter<bool>         ("doNewJEC");
 	mbPar["isMc"]                     = par[_key].getParameter<bool>         ("isMc");
-        if (par[_key].exists("doEraDepJEC")) mbPar["doEraDepJEC"] = par[_key].getParameter<bool> ("doEraDepJEC");
-        else mbPar["doEraDepJEC"] = false;
 
 	//mva value
 	mbPar["UseElMVA"]                 = par[_key].getParameter<bool>         ("UseElMVA");
@@ -541,8 +539,8 @@ bool DileptonEventSelector::operator()( edm::EventBase const & event, pat::strbi
 
 
 	  } // end of hbhe cuts*/
-passCut(ret, "HBHE noise and scraping filter");
-passCut(ret, "HBHE Iso noise filter");
+// passCut(ret, "HBHE noise and scraping filter");
+// passCut(ret, "HBHE Iso noise filter");
 
 	//_________MET Filters available in miniAOD_________
 
@@ -562,10 +560,10 @@ passCut(ret, "HBHE Iso noise filter");
 	  bool eebadscpass = false;
 	  bool eebadcalibpass = false;
 // if block of commented code in this section is restored, need to remove these 4 lines
-passCut(ret, "CSC Tight Halo filter");
-passCut(ret, "EE Bad SC filter");
-passCut(ret,"Ecal Dead TP");
-passCut(ret,"Good Vtx");
+// passCut(ret, "CSC Tight Halo filter");
+// passCut(ret, "EE Bad SC filter");
+// passCut(ret,"Ecal Dead TP");
+// passCut(ret,"Good Vtx");
 
 	  // Moriond 2018    
 	  for (unsigned int i=0; i<PatTriggerResults->size(); i++){
@@ -584,37 +582,6 @@ passCut(ret,"Good Vtx");
 	    passCut(ret, "MET filters");
 	  }
 	  else break;
-/*
-	  if ( considerCut("CSC Tight Halo filter") ) {    
-	    if (globaltighthalopass) passCut(ret, "CSC Tight Halo filter"); // CSC cut
-	    else break;
-	  } // end of CSC cuts
-    
-	  if ( considerCut("EE Bad SC filter") ) {	        	     
-	    if (eebadscpass) passCut(ret, "EE Bad SC filter"); // EE Bad SC cut
-	    else break;
-	  } // end of EE Bad SC cuts
-
-
-	  if( considerCut("HBHE noise and scraping filter") ) {
-	    if(hbhenoisepass) passCut(ret,"HBHE noise and scraping filter");
-	    else break;	   
-	  }
-	  
-	  if( considerCut("HBHE Iso noise filter")){
-	    if(hbhenoiseisopass) passCut(ret,"HBHE Iso noise filter");
-	    else break;
-	  }
-
-	  if(considerCut("Ecal Dead TP")){
-	    if(ecaldeadcellpass) passCut(ret,"Ecal Dead TP");
-	    else break;	  
-	  }
-	  if(considerCut("Good Vtx")){
-	    if(goodvertpass) passCut(ret,"Good Vtx");
-	    else break;
-	  }
-*/
         }
 /*
 
@@ -684,8 +651,8 @@ passCut(ret,"Good Vtx");
 	else break;
 
 */
-passCut(ret,"Bad Muon");
-passCut(ret,"Bad Charged Hadron");
+// passCut(ret,"Bad Muon");
+// passCut(ret,"Bad Charged Hadron");
         //
         //_____ Muon cuts ________________________________
         //
@@ -778,16 +745,6 @@ passCut(ret,"Bad Charged Hadron");
 	    bool pass = false;
 	    bool passLoose=false;
 	    while(1){
-	      //do kinematic selection first
-	      // electron Et cut
-	      if (_iel->pt()>mdPar["electron_minpt"]){ }
-	      else break;
-              
-	      // electron eta cut
-	      if ( fabs(_iel->eta())<mdPar["electron_maxeta"] ){ }
-	      else break;
-
-
 	      if (not _iel->gsfTrack().isNonnull() or not _iel->gsfTrack().isAvailable()) break;
 	      //skip if in barrel-endcap gap; doing it here means I never have to worry about it downstream since both electrons for analysis and those for cleaning are made here
 	      if( fabs(_iel->ecalDrivenMomentum().eta())>1.442 && fabs(_iel->ecalDrivenMomentum().eta())<1.556) break;
@@ -799,20 +756,19 @@ passCut(ret,"Bad Charged Hadron");
 	      
 
 	      if(_iel->pt() > 10) {
-	     	float mvaVal = mvaValue( *_iel,event);
-		if(fabs(_iel->ecalDrivenMomentum().eta()) <0.8){
-		  if(mvaVal>-0.86) passLoose = true;
-		}
-		else if(fabs(_iel->ecalDrivenMomentum().eta()) < 1.479){
-		  if(mvaVal>-0.81) passLoose = true;
-		}
-		else if(fabs(_iel->ecalDrivenMomentum().eta())<2.4){
-		  if(mvaVal > -0.72) passLoose=true;
-		}
+		passLoose = _iel->electronID("mvaEleID-Fall17-noIso-V2-wpLoose");
 		if (miniIso > 0.4) passLoose = false;
 	      }
+	      
+	      delete elptr;
 
-        delete elptr;
+	      // electron Et cut
+	      if (_iel->pt()>mdPar["electron_minpt"]){ }
+	      else break;
+              
+	      // electron eta cut
+	      if ( fabs(_iel->eta())<mdPar["electron_maxeta"] ){ }
+	      else break;
               
 	      pass = true;
 	      break;
@@ -860,8 +816,7 @@ passCut(ret,"Bad Charged Hadron");
         mvSelJets.clear();
 	mvSelJetsCleaned.clear();
         mvAllJets.clear();
-	//get run for jet energy collections
-	int run = event.id().run();
+        
         event.getByLabel( mtPar["jet_collection"], mhJets );
         for (std::vector<pat::Jet>::const_iterator _ijet = mhJets->begin();
              _ijet != mhJets->end(); ++_ijet){
@@ -1008,7 +963,7 @@ passCut(ret,"Bad Charged Hadron");
 	      }
 	      else{
 		//get the correct 4std::vector
-		jetP4 = correctJet(tmpJet, event,false,false,0);
+		jetP4 = correctJet(tmpJet, event);
 		//annoying thing to convert our tlorentzstd::vector to root::math::lorentzstd::vector
 		ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double > > rlv;
 		rlv.SetXYZT(jetP4.X(),jetP4.Y(),jetP4.Z(),jetP4.T());

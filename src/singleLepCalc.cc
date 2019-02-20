@@ -77,6 +77,7 @@ private:
     bool keepFullMChistory;
     bool cleanGenJets;
     bool UseElMVA;
+    bool UseElIDV1;
     bool doElSCMETCorr;
     bool orlhew;
     bool saveLooseLeps;
@@ -182,6 +183,8 @@ int singleLepCalc::BeginJob()
 
     if (mPset.exists("UseElMVA")) UseElMVA = mPset.getParameter<bool>("UseElMVA");
     else                          UseElMVA = false;
+    if (mPset.exists("UseElIDV1")) UseElIDV1 = mPset.getParameter<bool>("UseElIDV1");
+    else UseElIDV1 = true;
 
     if (mPset.exists("doElSCMETCorr")) doElSCMETCorr = mPset.getParameter<bool>("doElSCMETCorr");
     else                               doElSCMETCorr = false;
@@ -191,9 +194,9 @@ int singleLepCalc::BeginJob()
     if (mPset.exists("OverrideLHEWeights")) orlhew = mPset.getParameter<bool>("OverrideLHEWeights");
     else                                   orlhew = false;
     if (mPset.exists("basePDFname")) basePDFname = mPset.getParameter<std::string>("basePDFname");
-    else                             basePDFname = "cteq6";
+    else                             basePDFname = "NNPDF31_nnlo_as_0118_nf_4";
     if (mPset.exists("newPDFname"))  newPDFname = mPset.getParameter<std::string>("newPDFname");
-    else                             newPDFname = "PDF4LHC15_nlo_mc_pdfas";
+    else                             newPDFname = "NNPDF31_lo_as_0118";
     if (orlhew) {
         cout << "Overriding LHE weights, using "<<newPDFname<<" as new and "<<basePDFname<<" as base PDF set." << endl;
         LHAPDF::Info& cfg = LHAPDF::getConfig();
@@ -640,9 +643,11 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
 
     std::vector <double> elMVAValue;
     std::vector <double> elMVAValue_iso;
-    std::vector <int>    elIsMVATight;
+    std::vector <int>    elIsMVATight80;
+    std::vector <int>    elIsMVATight90;
     std::vector <int>    elIsMVALoose;
-    std::vector <int>    elIsMVATightIso;
+    std::vector <int>    elIsMVATightIso80;
+    std::vector <int>    elIsMVATightIso90;
     std::vector <int>    elIsMVALooseIso;
 
     //Extra info about isolation
@@ -675,15 +680,10 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
     std::vector<double> elMatchedPhi;
     std::vector<double> elMatchedEnergy;
 
-    std::vector<double> elIsTightBarrel;
-    std::vector<double> elIsMediumBarrel;
-    std::vector<double> elIsLooseBarrel;
-    std::vector<double> elIsVetoBarrel;
-
-    std::vector<double> elIsTightEndCap;
-    std::vector<double> elIsMediumEndCap;
-    std::vector<double> elIsLooseEndCap;
-    std::vector<double> elIsVetoEndCap;
+    std::vector<double> elIsTight;
+    std::vector<double> elIsMedium;
+    std::vector<double> elIsLoose;
+    std::vector<double> elIsVeto;
 
     edm::Handle<double> rhoHandle;
     event.getByLabel(rhoSrc_, rhoHandle);
@@ -776,135 +776,43 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
             elMHits.push_back((*iel)->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS));
             elVtxFitConv.push_back((*iel)->passConversionVeto());
             elNotConversion.push_back((*iel)->passConversionVeto());
-
-	    float dEtaInSeedBarrel =  (*iel)->deltaEtaSuperClusterTrackAtVtx() - (*iel)->superCluster()->eta() + (*iel)->superCluster()->seed()->eta();
-	    bool istightbarrel = ( (*iel)->full5x5_sigmaIetaIeta() < 0.0104 
-				   && fabs(dEtaInSeedBarrel) < 0.00353 
-				   && fabs((*iel)->deltaPhiSuperClusterTrackAtVtx()) < 0.0499
-				   && ( (*iel)->hcalOverEcal() < 0.026 + 1.12/(*iel)->energy() + 0.0368*rhoIso/(*iel)->energy() )
-				   && relIso < 0.0361 
-				   && ( fabs(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy()) < 0.0278 )
-				   && (*iel)->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 1
-				   && (*iel)->passConversionVeto()
-				   );
-
-	    float dEtaInSeedEndCap =  (*iel)->deltaEtaSuperClusterTrackAtVtx() - (*iel)->superCluster()->eta() + (*iel)->superCluster()->seed()->eta();
-	    bool istightendcap = ( (*iel)->full5x5_sigmaIetaIeta() < 0.0305 
-				   && fabs(dEtaInSeedEndCap) < 0.00567
-				   && fabs((*iel)->deltaPhiSuperClusterTrackAtVtx()) < 0.0165
-				   && ( (*iel)->hcalOverEcal() < 0.026 + .5/(*iel)->energy() + 0.201*rhoIso/(*iel)->energy() )
-				   && relIso < 0.094 
-				   && ( fabs(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy()) < 0.0158 )
-				   && (*iel)->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 1
-				   && (*iel)->passConversionVeto()
-				   );
-
-	    bool ismediumendcap = ( (*iel)->full5x5_sigmaIetaIeta() < 0.0309 
-				   && fabs(dEtaInSeedEndCap) < 0.00625
-				   && fabs((*iel)->deltaPhiSuperClusterTrackAtVtx()) < 0.0355
-				   && ( (*iel)->hcalOverEcal() < 0.026 + .5/(*iel)->energy() + 0.201*rhoIso/(*iel)->energy() )
-				   && relIso < 0.143 
-				   && ( fabs(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy()) < 0.0335 )
-				   && (*iel)->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 1
-				   && (*iel)->passConversionVeto()
-				   );
-
-	    bool islooseendcap = ( (*iel)->full5x5_sigmaIetaIeta() < 0.0356
-				   && fabs(dEtaInSeedEndCap) < 0.0072
-				   && fabs((*iel)->deltaPhiSuperClusterTrackAtVtx()) < 0.147
-				   && ( (*iel)->hcalOverEcal() < 0.0414 + .5/(*iel)->energy() + 0.201*rhoIso/(*iel)->energy() )
-				   && relIso < 0.146 
-				   && ( fabs(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy()) < 0.0875 )
-				   && (*iel)->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 1
-				   && (*iel)->passConversionVeto()
-				   );
-
-	    bool isvetoendcap = ( (*iel)->full5x5_sigmaIetaIeta() < 0.0445 
-				   && fabs(dEtaInSeedEndCap) < 0.00984
-				   && fabs((*iel)->deltaPhiSuperClusterTrackAtVtx()) < 0.0157
-				   && ( (*iel)->hcalOverEcal() < 0.05 + .5/(*iel)->energy() + 0.201*rhoIso/(*iel)->energy() )
-				   && relIso < 0.185
-				   && ( fabs(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy()) < 0.0962 )
-				   && (*iel)->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 3
-				   && (*iel)->passConversionVeto()
-				   );
-
-
-	    elIsTightBarrel.push_back(istightbarrel);
-	    elIsTightEndCap.push_back(istightendcap);
-            elIsMediumEndCap.push_back(ismediumendcap);
-            elIsLooseEndCap.push_back(islooseendcap);
-            elIsVetoEndCap.push_back(isvetoendcap);
-
-
-	    bool ismediumbarrel = ( (*iel)->full5x5_sigmaIetaIeta() < 0.0105
-                                   && fabs(dEtaInSeedBarrel) < 0.00365
-                                   && fabs((*iel)->deltaPhiSuperClusterTrackAtVtx()) < 0.0588
-                                   && ( (*iel)->hcalOverEcal() < 0.026 + 1.12/(*iel)->energy() + 0.0368*rhoIso/(*iel)->energy() )
-                                   && relIso < 0.0718
-                                   && ( fabs(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy()) < 0.0327 )
-                                   && (*iel)->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 1
-                                   && (*iel)->passConversionVeto()
-                                   );
-
-	    elIsMediumBarrel.push_back(ismediumbarrel);
-
-	    bool isloosebarrel = ( (*iel)->full5x5_sigmaIetaIeta() < 0.0105
-				    && fabs(dEtaInSeedBarrel) < 0.00387
-				    && fabs((*iel)->deltaPhiSuperClusterTrackAtVtx()) < 0.0716
-				    && ( (*iel)->hcalOverEcal() < 0.05 + 1.12/(*iel)->energy() + 0.0368*rhoIso/(*iel)->energy() )
-                                    && relIso < 0.133
-				    && ( fabs(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy()) < 0.129 )
-				    && (*iel)->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 1
-				    && (*iel)->passConversionVeto()
-				    );
-
-	    elIsLooseBarrel.push_back(isloosebarrel);
-
-	    bool isvetobarrel = ( (*iel)->full5x5_sigmaIetaIeta() < 0.0128
-				   && fabs(dEtaInSeedBarrel) < 0.00523
-				   && fabs((*iel)->deltaPhiSuperClusterTrackAtVtx()) < 0.159
-				   && ( (*iel)->hcalOverEcal() < 0.05 + 1.12/(*iel)->energy() + 0.0368*rhoIso/(*iel)->energy() )
-                                   && relIso < 0.168
-				   && ( fabs(1.0/(*iel)->ecalEnergy() - (*iel)->eSuperClusterOverP()/(*iel)->ecalEnergy()) < 0.193 )
-				   && (*iel)->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 2
-				   && (*iel)->passConversionVeto()
-				   );
-
-	    elIsVetoBarrel.push_back(isvetobarrel);
-
-			
-            if (UseElMVA) {
-                elMVAValue.push_back( selector->mvaValue(iel->operator*(),event) );
-                elMVAValue_iso.push_back( selector->mvaValue_iso(iel->operator*(),event) );
-		bool mvapass = 0;
-		bool mvapassloose = 0;
-		bool mvapassiso = 0;
-		bool mvapassisoloose = 0;
-		if ( fabs((*iel)->superCluster()->eta())<=0.8){
-		  mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(0) - tightElMVA.at(2)*exp(-1*(*iel)->pt()/tightElMVA.at(1)));
-		  mvapassiso = selector->mvaValue(iel->operator*(),event) > (tightElMVAiso.at(0) - tightElMVAiso.at(2)*exp(-1*(*iel)->pt()/tightElMVAiso.at(1)));
-		  mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(0);
-		  mvapassisoloose = selector->mvaValue(iel->operator*(),event) > looseElMVAiso.at(0);
-		}
-		else if ( fabs((*iel)->superCluster()->eta())<=1.479){
-		  mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(3) - tightElMVA.at(5)*exp(-1*(*iel)->pt()/tightElMVA.at(4)));
-		  mvapassiso = selector->mvaValue(iel->operator*(),event) > (tightElMVAiso.at(3) - tightElMVAiso.at(5)*exp(-1*(*iel)->pt()/tightElMVAiso.at(4)));
-		  mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(1);
-		  mvapassisoloose = selector->mvaValue(iel->operator*(),event) > looseElMVAiso.at(1);
-		}
-		else{
-		  mvapass = selector->mvaValue(iel->operator*(),event) > (tightElMVA.at(6) - tightElMVA.at(8)*exp(-1*(*iel)->pt()/tightElMVA.at(7)));
-		  mvapassiso = selector->mvaValue(iel->operator*(),event) > (tightElMVAiso.at(6) - tightElMVAiso.at(8)*exp(-1*(*iel)->pt()/tightElMVAiso.at(7)));
-		  mvapassloose = selector->mvaValue(iel->operator*(),event) > looseElMVA.at(2);
-		  mvapassisoloose = selector->mvaValue(iel->operator*(),event) > looseElMVAiso.at(2);
-		}
-		elIsMVATight.push_back(mvapass);
-		elIsMVALoose.push_back(mvapassloose);
-		elIsMVATightIso.push_back(mvapassiso);
-		elIsMVALooseIso.push_back(mvapassisoloose);
-            }
 	    
+
+	    if(UseElIDV1){
+	      elIsTight.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V1-tight"));
+	      elIsMedium.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V1-medium"));
+	      elIsLoose.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V1-loose"));
+	      elIsVeto.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V1-veto"));
+
+	      if (UseElMVA) {
+		elIsMVATight80.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V1-wp80"));
+		elIsMVATight90.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V1-wp90"));
+		elIsMVALoose.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V1-wpLoose"));
+		elMVAValue.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV1Values"));
+
+		elIsMVATightIso80.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V1-wp80"));
+		elIsMVATightIso90.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V1-wp90"));
+		elIsMVALooseIso.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V1-wpLoose"));
+		elMVAValue_iso.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17IsoV1Values"));
+	      }
+	    }else{
+	      elIsTight.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-tight"));
+	      elIsMedium.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-medium"));
+	      elIsLoose.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-loose"));
+	      elIsVeto.push_back((*iel)->electronID("cutBasedElectronID-Fall17-94X-V2-veto"));
+
+	      if (UseElMVA) {
+		elIsMVATight80.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wp80"));
+		elIsMVATight90.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wp90"));
+		elIsMVALoose.push_back((*iel)->electronID("mvaEleID-Fall17-noIso-V2-wpLoose"));
+		elMVAValue.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV2Values"));
+
+		elIsMVATightIso80.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wp80"));
+		elIsMVATightIso90.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wp90"));
+		elIsMVALooseIso.push_back((*iel)->electronID("mvaEleID-Fall17-iso-V2-wpLoose"));
+		elMVAValue_iso.push_back((*iel)->userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values"));
+	      }
+	    }
 
             if(isMc && keepFullMChistory){
                 //cout << "start\n";
@@ -966,15 +874,10 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
     SetValue("elCtfCharge", elCtfCharge);
     SetValue("elScPixCharge", elScPixCharge);
 
-    SetValue("elIsTightBarrel", elIsTightBarrel);
-    SetValue("elIsMediumBarrel",elIsMediumBarrel);
-    SetValue("elIsLooseBarrel",elIsLooseBarrel);
-    SetValue("elIsVetoBarrel",elIsVetoBarrel);
-
-    SetValue("elIsTightEndCap", elIsTightEndCap);
-    SetValue("elIsMediumEndCap", elIsMediumEndCap);
-    SetValue("elIsLooseEndCap", elIsLooseEndCap);
-    SetValue("elIsVetoEndCap", elIsVetoEndCap);
+    SetValue("elIsTight", elIsTight);
+    SetValue("elIsMedium",elIsMedium);
+    SetValue("elIsLoose",elIsLoose);
+    SetValue("elIsVeto",elIsVeto);
 
     //Quality requirements
     SetValue("elRelIso" , elRelIso); //Isolation
@@ -997,9 +900,11 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
 
     SetValue("elMVAValue", elMVAValue);
     SetValue("elMVAValue_iso", elMVAValue_iso);
-    SetValue("elIsMVATight", elIsMVATight);
+    SetValue("elIsMVATight80", elIsMVATight80);
+    SetValue("elIsMVATight90", elIsMVATight90);
     SetValue("elIsMVALoose", elIsMVALoose);
-    SetValue("elIsMVATightIso",elIsMVATightIso);
+    SetValue("elIsMVATightIso80",elIsMVATightIso80);
+    SetValue("elIsMVATightIso90",elIsMVATightIso90);
     SetValue("elIsMVALooseIso",elIsMVALooseIso);
 
     //Extra info about isolation
@@ -1151,18 +1056,19 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
  
     //Four std::vector
     SetValue("AK8JetPt"     , AK8JetPt);
-    SetValue("AK8JetPt_jesup"     , AK8JetPt_jesup);
-    SetValue("AK8JetPt_jesdn"     , AK8JetPt_jesdn);
-    SetValue("AK8JetPt_jerup"     , AK8JetPt_jerup);
-    SetValue("AK8JetPt_jerdn"     , AK8JetPt_jerdn);
     SetValue("AK8JetEta"    , AK8JetEta);
     SetValue("AK8JetPhi"    , AK8JetPhi);
     SetValue("AK8JetEnergy" , AK8JetEnergy);
-    SetValue("AK8JetEnergy_jesup"     , AK8JetEnergy_jesup);
-    SetValue("AK8JetEnergy_jesdn"     , AK8JetEnergy_jesdn);
-    SetValue("AK8JetEnergy_jerup"     , AK8JetEnergy_jerup);
-    SetValue("AK8JetEnergy_jerdn"     , AK8JetEnergy_jerdn);
-
+    if(doAllJetSyst){
+      SetValue("AK8JetPt_jesup"     , AK8JetPt_jesup);
+      SetValue("AK8JetPt_jesdn"     , AK8JetPt_jesdn);
+      SetValue("AK8JetPt_jerup"     , AK8JetPt_jerup);
+      SetValue("AK8JetPt_jerdn"     , AK8JetPt_jerdn);
+      SetValue("AK8JetEnergy_jesup"     , AK8JetEnergy_jesup);
+      SetValue("AK8JetEnergy_jesdn"     , AK8JetEnergy_jesdn);
+      SetValue("AK8JetEnergy_jerup"     , AK8JetEnergy_jerup);
+      SetValue("AK8JetEnergy_jerdn"     , AK8JetEnergy_jerdn);
+    }
     SetValue("AK8JetCSV"     , AK8JetCSV);
     SetValue("AK8JetDoubleB" , AK8JetDoubleB);
 
@@ -1257,22 +1163,24 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
 
     //Four std::vector
     SetValue("AK4JetPt"     , AK4JetPt);
-    SetValue("AK4JetPt_jesup"     , AK4JetPt_jesup);
-    SetValue("AK4JetPt_jesdn"     , AK4JetPt_jesdn);
-    SetValue("AK4JetPt_jerup"     , AK4JetPt_jerup);
-    SetValue("AK4JetPt_jerdn"     , AK4JetPt_jerdn);
     SetValue("AK4JetEta"    , AK4JetEta);
     SetValue("AK4JetPhi"    , AK4JetPhi);
     SetValue("AK4JetEnergy" , AK4JetEnergy);
-    SetValue("AK4JetEnergy_jesup"     , AK4JetEnergy_jesup);
-    SetValue("AK4JetEnergy_jesdn"     , AK4JetEnergy_jesdn);
-    SetValue("AK4JetEnergy_jerup"     , AK4JetEnergy_jerup);
-    SetValue("AK4JetEnergy_jerdn"     , AK4JetEnergy_jerdn);
+    if(doAllJetSyst){
+      SetValue("AK4JetPt_jesup"     , AK4JetPt_jesup);
+      SetValue("AK4JetPt_jesdn"     , AK4JetPt_jesdn);
+      SetValue("AK4JetPt_jerup"     , AK4JetPt_jerup);
+      SetValue("AK4JetPt_jerdn"     , AK4JetPt_jerdn);
+      SetValue("AK4JetEnergy_jesup"     , AK4JetEnergy_jesup);
+      SetValue("AK4JetEnergy_jesdn"     , AK4JetEnergy_jesdn);
+      SetValue("AK4JetEnergy_jerup"     , AK4JetEnergy_jerup);
+      SetValue("AK4JetEnergy_jerdn"     , AK4JetEnergy_jerdn);
+      SetValue("AK4HT_jesup"     , AK4HT_jesup);
+      SetValue("AK4HT_jesdn"     , AK4HT_jesdn);
+      SetValue("AK4HT_jerup"     , AK4HT_jerup);
+      SetValue("AK4HT_jerdn"     , AK4HT_jerdn);
+    }
     SetValue("AK4HT"        , AK4HT);
-    SetValue("AK4HT_jesup"     , AK4HT_jesup);
-    SetValue("AK4HT_jesdn"     , AK4HT_jesdn);
-    SetValue("AK4HT_jerup"     , AK4HT_jerup);
-    SetValue("AK4HT_jerdn"     , AK4HT_jerdn);
     SetValue("AK4JetBTag"   , AK4JetBTag);
     SetValue("AK4JetBTag_bSFup"   , AK4JetBTag_bSFup);
     SetValue("AK4JetBTag_bSFdn"   , AK4JetBTag_bSFdn);
@@ -1370,11 +1278,39 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
         }
       }
     }
+
+    double _metmod = -9999.0;
+    double _metmod_phi = -9999.0;
+    // Corrected METMOD
+    double _corr_metmod = -9999.0;
+    double _corr_metmod_phi = -9999.0;
+
+    edm::InputTag METmodColl = edm::InputTag("slimmedMETsModifiedMET");
+    edm::Handle<std::vector<pat::MET> > METmod;
+    if(event.getByLabel(METmodColl, METmod)){
+      edm::Ptr<pat::MET> metmod = edm::Ptr<pat::MET>( METmod, 0);
+      
+      if(metmod.isNonnull() && metmod.isAvailable()) {
+        _metmod = metmod->p4().pt();
+        _metmod_phi = metmod->p4().phi();
+        
+        TLorentzVector corrMETMOD = selector->correctMet(*metmod, event, false);
+        //std::cout<<(selector->GetCleanedCorrMet()).Pt()<<std::endl;
+        if(corrMETMOD.Pt()>0) {
+	  _corr_metmod = corrMETMOD.Pt();
+	  _corr_metmod_phi = corrMETMOD.Phi();
+        }
+      }
+    }
     
     SetValue("metnohf", _metnohf);
     SetValue("metnohf_phi", _metnohf_phi);
     SetValue("corr_metnohf", _corr_metnohf);
     SetValue("corr_metnohf_phi", _corr_metnohf_phi);
+    SetValue("metmod", _metmod);
+    SetValue("metmod_phi", _metmod_phi);
+    SetValue("corr_metmod", _corr_metmod);
+    SetValue("corr_metmod_phi", _corr_metmod_phi);
 
     //_____ Gen Info ______________________________
     //
@@ -1391,6 +1327,8 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
     std::vector <int> genStatus;
     std::vector <int> genMotherID;
     std::vector <int> genMotherIndex;
+    
+    double LHEweightorig = 0;
     double HTfromHEPEUP = 0;
     int NPartonsfromHEPEUP = 0;
 
@@ -1419,6 +1357,10 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
     std::vector <double> genBSLEnergy;
     std::vector <int> genBSLID;
 
+    std::vector <int> NewPDFids;
+    std::vector <double> NewPDFweights;
+    std::vector <double> NewPDFweightsBase;
+
     if (isMc){
         //load info for event weight
         edm::Handle<GenEventInfoProduct> genEvtInfo;
@@ -1432,11 +1374,13 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
         MCWeight = theWeight;
         
         if (orlhew) {
+
           float x1 = genEvtInfo->pdf()->x.first;
           float x2 = genEvtInfo->pdf()->x.second;
           double Q = genEvtInfo->pdf()->scalePDF;
           int id1 = genEvtInfo->pdf()->id.first;
           int id2 = genEvtInfo->pdf()->id.second;
+          //std::cout<<"x1 x2 Q id1 id2"<<std::endl;
           //std::cout<<x1<<" "<<x2<<" "<<Q<<" "<<id1<<" "<<id2<<std::endl;
 
           //Initialize PDF sets
@@ -1446,75 +1390,74 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
           // calculate central PDFs for generator set,
           double pdf1_gen = pdf1.xfxQ(id1, x1, Q);
           double pdf2_gen = pdf1.xfxQ(id2, x2, Q);
+	  //std::cout<<"pdf1_gen = "<<pdf1_gen<<" pdf2_gen = "<<pdf2_gen<<std::endl;
           delete basepdf1;
   
           const LHAPDF::PDFSet newset(newPDFname);
           const size_t nmem = newset.size();
           const std::vector<LHAPDF::PDF*> newpdfs = newset.mkPDFs();
-          delete (newpdfs[0]);
-          for (size_t i = 1; i<nmem; i++) {
+          for (size_t i = 0; i<nmem; i++) {
             const LHAPDF::GridPDF& pdf2 = * dynamic_cast<const LHAPDF::GridPDF*>(newpdfs[i]);
 
             double pdf1_new = pdf2.xfxQ(id1, x1, Q);
             double pdf2_new = pdf2.xfxQ(id2, x2, Q);
-  
-            //std::cout<<"weight"<<i<<" = "<<(pdf1_new*pdf2_new)/(pdf1_gen*pdf2_gen)<<std::endl;
-            LHEweights.push_back((pdf1_new*pdf2_new)/(pdf1_gen*pdf2_gen));
-            LHEweightids.push_back(2000+i);
+            NewPDFweights.push_back((pdf1_new*pdf2_new)/(pdf1_gen*pdf2_gen));
+            NewPDFweightsBase.push_back(pdf1_gen*pdf2_gen);
+            NewPDFids.push_back(315000+i);
 
             delete (newpdfs[i]);
           }
         }
-        else {
-  	  edm::Handle<LHEEventProduct> EvtHandle;
-  	  edm::InputTag theSrc("externalLHEProducer");
-  	  if(event.getByLabel(theSrc,EvtHandle)){
-  	  
-	    // Save LHE-level HT calculation from quarks:
-	    if(saveGenHT){
-
-	      // Save the madgraph event weight
-	      const lhef::HEPEUP& lheEvent =EvtHandle->hepeup();
-
-	      // Loop over HepEvent entries  
-	      std::vector<lhef::HEPEUP::FiveVector> lheParticles = lheEvent.PUP;
-	      size_t numParticles = lheParticles.size();
-	      for(size_t idxParticle = 0; idxParticle < numParticles; ++idxParticle){
-
-		// PDG ID        
-		int absPdgId = TMath::Abs(lheEvent.IDUP[idxParticle]);
-
-		// Particle status
-		int status = lheEvent.ISTUP[idxParticle];
-
-		// Sum up pt and multiplicity of status 1 quarks and gluons
-		if(status == 1 && ((absPdgId >= 1 && absPdgId <= 6) || absPdgId == 21)){
-		  HTfromHEPEUP += TMath::Sqrt(TMath::Power(lheParticles[idxParticle][0], 2.) + TMath::Power(lheParticles[idxParticle][1], 2.));
-		  NPartonsfromHEPEUP++;
-		}
+	edm::Handle<LHEEventProduct> EvtHandle;
+	edm::InputTag theSrc("externalLHEProducer");
+	if(event.getByLabel(theSrc,EvtHandle)){
+	  
+	  // Save LHE-level HT calculation from quarks:
+	  if(saveGenHT){
+	    
+	    // Save the madgraph event weight
+	    const lhef::HEPEUP& lheEvent =EvtHandle->hepeup();
+	    
+	    // Loop over HepEvent entries  
+	    std::vector<lhef::HEPEUP::FiveVector> lheParticles = lheEvent.PUP;
+	    size_t numParticles = lheParticles.size();
+	    for(size_t idxParticle = 0; idxParticle < numParticles; ++idxParticle){
+	      
+	      // PDG ID        
+	      int absPdgId = TMath::Abs(lheEvent.IDUP[idxParticle]);
+	      
+	      // Particle status
+	      int status = lheEvent.ISTUP[idxParticle];
+	      
+	      // Sum up pt and multiplicity of status 1 quarks and gluons
+	      if(status == 1 && ((absPdgId >= 1 && absPdgId <= 6) || absPdgId == 21)){
+		HTfromHEPEUP += TMath::Sqrt(TMath::Power(lheParticles[idxParticle][0], 2.) + TMath::Power(lheParticles[idxParticle][1], 2.));
+		NPartonsfromHEPEUP++;
 	      }
 	    }
+	  }
 
-  	    // Storing LHE weights https://twiki.cern.ch/twiki/bin/viewauth/CMS/LHEReaderCMSSW
-  	    // for MC@NLO renormalization and factorization scale. 
-  	    // ID numbers 1001 - 1009. (muR,muF) = 
-  	    // 0 = 1001: (1,1)    3 = 1004: (2,1)    6 = 1007: (0.5,1)  
-  	    // 1 = 1002: (1,2)    4 = 1005: (2,2)  	 7 = 1008: (0.5,2)  
-  	    // 2 = 1003: (1,0.5)  5 = 1006: (2,0.5)	 8 = 1009: (0.5,0.5)
-  	    // for PDF variations: ID numbers > 2000
-  
-  	    std::string weightidstr;
-  	    int weightid;
-  	    if(EvtHandle->weights().size() > 0){	  
-  	      for(unsigned int i = 0; i < EvtHandle->weights().size(); i++){
-  	        weightidstr = EvtHandle->weights()[i].id;
-  	        weightid = std::stoi(weightidstr);
-  	        LHEweights.push_back(EvtHandle->weights()[i].wgt/EvtHandle->originalXWGTUP());
-  	        LHEweightids.push_back(weightid);
-  	      }
-  	    }
-  	  }
-  	}
+	  // Storing LHE weights https://twiki.cern.ch/twiki/bin/viewauth/CMS/LHEReaderCMSSW
+	  // for MC@NLO renormalization and factorization scale. 
+	  // ID numbers 1001 - 1009. (muR,muF) = 
+	  // 0 = 1001: (1,1)    3 = 1004: (2,1)    6 = 1007: (0.5,1)  
+	  // 1 = 1002: (1,2)    4 = 1005: (2,2)  	 7 = 1008: (0.5,2)  
+	  // 2 = 1003: (1,0.5)  5 = 1006: (2,0.5)	 8 = 1009: (0.5,0.5)
+	  // for PDF variations: ID numbers > 2000
+	  
+	  LHEweightorig = EvtHandle->originalXWGTUP();
+
+	  std::string weightidstr;
+	  int weightid;
+	  if(EvtHandle->weights().size() > 0){	  
+	    for(unsigned int i = 0; i < EvtHandle->weights().size(); i++){
+	      weightidstr = EvtHandle->weights()[i].id;
+	      weightid = std::stoi(weightidstr);
+	      LHEweights.push_back(EvtHandle->weights()[i].wgt/EvtHandle->originalXWGTUP());
+	      LHEweightids.push_back(weightid);
+	    }
+	  }
+	}
 
         //load genparticles collection
         edm::Handle<reco::GenParticleCollection> genParticles;
@@ -1706,8 +1649,12 @@ int singleLepCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector 
 
     SetValue("evtWeightsMC", evtWeightsMC);
     SetValue("MCWeight", MCWeight);
+    SetValue("LHEweightorig", LHEweightorig);
     SetValue("LHEweights", LHEweights);
     SetValue("LHEweightids", LHEweightids);
+    SetValue("NewPDFids", NewPDFids);
+    SetValue("NewPDFweights", NewPDFweights);
+    SetValue("NewPDFweightsBase", NewPDFweightsBase);
     SetValue("HTfromHEPUEP", HTfromHEPEUP);
     SetValue("NPartonsfromHEPUEP", NPartonsfromHEPEUP);
 
