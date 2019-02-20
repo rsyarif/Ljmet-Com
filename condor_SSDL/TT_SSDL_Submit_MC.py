@@ -18,7 +18,8 @@ cmssw = 'CMSSW_9_4_11'
 # logdir = 'LJMet94x_2lepTT_2017datasets_2018_11_16_rizki' #TEST
 # logdir = 'LJMet94x_2lepTT_2017datasets_2018_11_18_rizki'
 # logdir = 'LJMet94x_2lepTT_2017datasets_2019_1_13_rizki' #More Triggers
-logdir = 'LJMet94x_2lepTT_2017datasets_2019_2_5_rizki' #More Triggers: HT
+# logdir = 'LJMet94x_2lepTT_2017datasets_2019_2_5_rizki' #More Triggers: HT
+logdir = 'LJMet94x_2lepTT_2017datasets_2019_2_18_rizki' #DoubleMu was still missing
 outdir = '/eos/uscms/store/group/lpcljm/'+logdir+'/'
 
 ### What is the name of your FWLite Analyzer
@@ -107,7 +108,7 @@ os.system('eos root://cmseos.fnal.gov/ mkdir -p '+dir[i])
 if os.path.exists(rel_base+'/../ljmet.tar'):
 	print 'tar already exists! Will not re-tar!'
 else:
-	os.system('tar -zcvf '+rel_base+'/../ljmet.tar ../../../* --exclude="../../../.git" --exclude="../../../LJMet/Com/.git" ')
+	os.system('tar -zcvf '+rel_base+'/../ljmet.tar ../../../* --exclude="../../../.git" --exclude="../../../LJMet/Com/.git" --exclude="../../../LJMet/Com/condor_SSDL/hadd_jobs*" ')
 # 	os.system('tar -zcvf '+rel_base+'/../ljmet.tar '+rel_base+' --exclude="src/NNKit/.git" --exclude="'+rel_base+'src/.git" --exclude="'+rel_base+'src/LJMet/Com/.git" --exclude=".SCRAM" --exclude="tmp" ')
 
 os.system('xrdcp -v '+rel_base+'/../ljmet.tar root://cmseos.fnal.gov//store/group/lpcljm/'+logdir+'/')
