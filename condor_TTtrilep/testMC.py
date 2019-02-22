@@ -209,7 +209,8 @@ process.event_selector = cms.PSet(
     trigger_collection       = cms.InputTag('TriggerResults::HLT'),
     pv_collection            = cms.InputTag('offlineSlimmedPrimaryVertices'),
     jet_collection           = cms.InputTag('slimmedJets'),
-    slimmedJetsAK8           = cms.InputTag('packedJetsAK8Puppi'), #'slimmedJetsAK8'),#
+    slimmedJetsAK8           = cms.InputTag('slimmedJetsAK8'),#
+#     slimmedJetsAK8           = cms.InputTag('packedJetsAK8Puppi'), #'slimmedJetsAK8'),#
     muon_collection          = cms.InputTag('slimmedMuons'),
     electron_collection      = cms.InputTag('slimmedElectrons::PATtest'), #'slimmedElectrons'), #
     tau_collection	     = cms.InputTag('slimmedTaus'),
@@ -270,7 +271,7 @@ process.inputs = cms.PSet (
     skipEvents = cms.int32(0),
     lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange()),
     fileNames  = cms.vstring(
-        'test_producer_mediator_TprimeTprime_M-1100_TuneCP5_13TeV-madgraph-pythia8.root',
+        'mediator_TprimeTprime_M-1100_TuneCP5_13TeV-madgraph-pythia8_test_producer_MC.root',
         )
     )
 
