@@ -77,60 +77,34 @@ process.event_selector = cms.PSet(
     dump_trigger = cms.bool(True),
 
     trigger_path_el = cms.vstring(        
-        'HLT_DoubleEle24_22_eta2p1_WPLoose_Gsf_v',            
-        'HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v', #exists in 2017        
         'HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v',  #exists in 2017    
-        'HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v',        
-        'HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_v',           
-        'HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300_v',    
-        'HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT250_v',    
+        'HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v', #exists in 2017        
+
         'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v',   #exists in 2017 
 		'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ', #exists in 2017 
-        'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v',   
-        'HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v',  
-        'HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_v',  
         'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v', #exists in 2017  
-        'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v',  #exists in 2017 
-        'HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v',  
-        'HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v',                
-        'HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_v',      
-        'HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT250_v',      
-        'HLT_Ele16_Ele12_Ele8_CaloIdL_TrackIdL_v',            
-        'HLT_Mu8_DiEle12_CaloIdL_TrackIdL_v',                 
-        'HLT_DiMu9_Ele9_CaloIdL_TrackIdL_v',                  
+        'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v',  #exists in 2017
+
+        #for trig efficiency
+        'HLT_Ele27_WPTight_Gsf_v',
+        'HLT_Ele35_WPTight_Gsf_v',
         ),
     trigger_path_mu = cms.vstring(
-        'HLT_DoubleIsoMu17_eta2p1_v',                         
-        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8', 
-        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v', #exists in 2017  (PreScaled!)               
-        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v',  #exists in 2017   (PreScaled!)               
-        'HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v',            
-        'HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v',               
-        'HLT_Mu27_TkMu8_v',                                   
-        'HLT_Mu30_TkMu11_v',                                  
-        'HLT_Mu40_TkMu11_v',                                  
-        'HLT_Mu17_Mu8_v',                                     
-        'HLT_Mu17_Mu8_DZ_v',                                  
-        'HLT_Mu17_Mu8_SameSign_DZ_v',                         
-        'HLT_Mu20_Mu10_v',                                    
-        'HLT_Mu20_Mu10_DZ_v',                                 
-        'HLT_Mu20_Mu10_SameSign_DZ_v',                        
-        'HLT_DoubleMu8_Mass8_PFHT300_v',                      
-        'HLT_DoubleMu8_Mass8_PFHT250_v',                      
-        'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v',   #exists in 2017 (PreScaled!)
+        'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v',   #exists in 2017 
 		'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ', #exists in 2017 
-        'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v',   
-        'HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v',  
-        'HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_v',  
-        'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v',  #exists in 2017 
-        'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v',  #exists in 2017 
-        'HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v',  
-        'HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v',                
-        'HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_v',      
-        'HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT250_v',      
-        'HLT_Mu8_DiEle12_CaloIdL_TrackIdL_v',                 
-        'HLT_DiMu9_Ele9_CaloIdL_TrackIdL_v',                  
-        'HLT_TripleMu_12_10_5_v',
+        'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v', #exists in 2017  
+        'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v',  #exists in 2017
+
+        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v',    #exists in 2017  (PreScaled!)        
+        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v',  #exists in 2017 (PreScaled!)        
+        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8_v',                      
+        'HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v',           
+        'HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v',        
+
+        #for trig efficiency
+        'HLT_IsoMu24_v',
+        'HLT_IsoTkMu24_v',
+        'HLT_IsoMu27_v',
         ),
     
     mctrigger_path_el = cms.vstring(''),
