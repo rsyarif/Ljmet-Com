@@ -33,6 +33,13 @@
 #include "LJMet/Com/interface/MiniIsolation.h"
 #include "HepPDT/ParticleID.hh"
 
+#include "LHAPDF/LHAPDF.h"
+#include "LHAPDF/GridPDF.h"
+#include "LHAPDF/Info.h"
+#include "LHAPDF/Config.h"
+#include "LHAPDF/PDFInfo.h"
+#include "LHAPDF/PDFSet.h"
+#include "LHAPDF/Factories.h"
 
 using std::cout;
 using std::endl;
@@ -78,6 +85,10 @@ private:
     bool keepFullMChistory;
     bool doTriggerStudy_; 
     double rhoIso;
+    
+    bool orlhew;
+    std::string basePDFname;
+    std::string newPDFname;
 
     boost::shared_ptr<TopElectronSelector>     electronSelL_, electronSelM_, electronSelT_;
     std::vector<reco::Vertex> goodPVs;
@@ -87,6 +98,8 @@ private:
 };
 
 static int reg = LjmetFactory::GetInstance()->Register(new DileptonCalc(), "DileptonCalc");
+
+using namespace LHAPDF;
 
 DileptonCalc::DileptonCalc()
 {
@@ -175,6 +188,22 @@ int DileptonCalc::BeginJob()
     // eleLooseIdMapLabel_ = mPset.getParameter<edm::InputTag>("eleMVALooseIDMap");
     //eleTightIdMapLabel_ = mPset.getParameter<edm::InputTag>("eleMVATightIDMap");
     //mvaValuesMapLabel_ = mPset.getParameter<edm::InputTag>("mvaValuesMap");
+    
+    //NewPDF stuff    
+    if (mPset.exists("OverrideLHEWeights")) orlhew = mPset.getParameter<bool>("OverrideLHEWeights");
+    else                                   orlhew = false;
+    if (mPset.exists("basePDFname")) basePDFname = mPset.getParameter<std::string>("basePDFname");
+    else                             basePDFname = "NNPDF31_nnlo_as_0118_nf_4";
+    if (mPset.exists("newPDFname"))  newPDFname = mPset.getParameter<std::string>("newPDFname");
+    else                             newPDFname = "NNPDF31_lo_as_0118";
+    if (orlhew) {
+        cout << "Overriding LHE weights, using "<<newPDFname<<" as new and "<<basePDFname<<" as base PDF set." << endl;
+        LHAPDF::Info& cfg = LHAPDF::getConfig();
+        cfg.set_entry("Verbosity", 0);
+
+    }
+    else cout << "Writing LHE weights (no override)." << endl;
+
     
     return 0;
 }
@@ -1637,11 +1666,18 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
     std::vector<bool> genPMotherHasC;
     std::vector<bool> genPMotherHasB;
     std::vector<int> genPMother;
+
+    double LHEweightorig = 0;
+
     //event weights
     std::vector<double> evtWeightsMC;
     float MCWeight=1;
     std::vector<double> LHEweights;
     std::vector<int> LHEweightids;
+
+    std::vector <int> NewPDFids;
+    std::vector <double> NewPDFweights;
+    std::vector <double> NewPDFweightsBase;
 
     if (isMc){
       //load info for event weight
@@ -1655,30 +1691,67 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
       evtWeightsMC=evtWeights;
       MCWeight = theWeight;
    
+        if (orlhew) {
+
+          float x1 = genEvtInfo->pdf()->x.first;
+          float x2 = genEvtInfo->pdf()->x.second;
+          double Q = genEvtInfo->pdf()->scalePDF;
+          int id1 = genEvtInfo->pdf()->id.first;
+          int id2 = genEvtInfo->pdf()->id.second;
+          //std::cout<<"x1 x2 Q id1 id2"<<std::endl;
+          //std::cout<<x1<<" "<<x2<<" "<<Q<<" "<<id1<<" "<<id2<<std::endl;
+
+          //Initialize PDF sets
+          LHAPDF::PDF* basepdf1 = LHAPDF::mkPDF(basePDFname,0);
+          const LHAPDF::GridPDF& pdf1 = * dynamic_cast<const LHAPDF::GridPDF*>(basepdf1);
+  
+          // calculate central PDFs for generator set,
+          double pdf1_gen = pdf1.xfxQ(id1, x1, Q);
+          double pdf2_gen = pdf1.xfxQ(id2, x2, Q);
+	  //std::cout<<"pdf1_gen = "<<pdf1_gen<<" pdf2_gen = "<<pdf2_gen<<std::endl;
+          delete basepdf1;
+  
+          const LHAPDF::PDFSet newset(newPDFname);
+          const size_t nmem = newset.size();
+          const std::vector<LHAPDF::PDF*> newpdfs = newset.mkPDFs();
+          for (size_t i = 0; i<nmem; i++) {
+            const LHAPDF::GridPDF& pdf2 = * dynamic_cast<const LHAPDF::GridPDF*>(newpdfs[i]);
+
+            double pdf1_new = pdf2.xfxQ(id1, x1, Q);
+            double pdf2_new = pdf2.xfxQ(id2, x2, Q);
+            NewPDFweights.push_back((pdf1_new*pdf2_new)/(pdf1_gen*pdf2_gen));
+            NewPDFweightsBase.push_back(pdf1_gen*pdf2_gen);
+            NewPDFids.push_back(315000+i);
+
+            delete (newpdfs[i]);
+          }
+        }
 
       //weights for mc uncertainties
       edm::Handle<LHEEventProduct> EvtHandle;
       edm::InputTag theSrc("externalLHEProducer");
       if(event.getByLabel(theSrc,EvtHandle)){
 	  
-	// Storing LHE weights https://twiki.cern.ch/twiki/bin/viewauth/CMS/LHEReaderCMSSW
-	// for MC@NLO renormalization and factorization scale. 
-	// ID numbers 1001 - 1009. (muR,muF) = 
-	// 0 = 1001: (1,1)    3 = 1004: (2,1)    6 = 1007: (0.5,1)  
-	// 1 = 1002: (1,2)    4 = 1005: (2,2)   7 = 1008: (0.5,2)  
-	// 2 = 1003: (1,0.5)  5 = 1006: (2,0.5) 8 = 1009: (0.5,0.5)
-	// for PDF variations: ID numbers > 2000
+		// Storing LHE weights https://twiki.cern.ch/twiki/bin/viewauth/CMS/LHEReaderCMSSW
+		// for MC@NLO renormalization and factorization scale. 
+		// ID numbers 1001 - 1009. (muR,muF) = 
+		// 0 = 1001: (1,1)    3 = 1004: (2,1)    6 = 1007: (0.5,1)  
+		// 1 = 1002: (1,2)    4 = 1005: (2,2)   7 = 1008: (0.5,2)  
+		// 2 = 1003: (1,0.5)  5 = 1006: (2,0.5) 8 = 1009: (0.5,0.5)
+		// for PDF variations: ID numbers > 2000
+		
+		LHEweightorig = EvtHandle->originalXWGTUP();
 
-	std::string weightidstr;
-	int weightid;
-	if(EvtHandle->weights().size() > 0){  
-	  for(unsigned int i = 0; i < EvtHandle->weights().size(); i++){
-	    weightidstr = EvtHandle->weights()[i].id;
-	    weightid = std::stoi(weightidstr);
-	    LHEweights.push_back(EvtHandle->weights()[i].wgt/EvtHandle->originalXWGTUP());
-	    LHEweightids.push_back(weightid);
-	  }
-	}
+		std::string weightidstr;
+		int weightid;
+		if(EvtHandle->weights().size() > 0){  
+		  for(unsigned int i = 0; i < EvtHandle->weights().size(); i++){
+			weightidstr = EvtHandle->weights()[i].id;
+			weightid = std::stoi(weightidstr);
+			LHEweights.push_back(EvtHandle->weights()[i].wgt/EvtHandle->originalXWGTUP());
+			LHEweightids.push_back(weightid);
+		  }
+		}
       }
 
       //load genparticles collection
@@ -1770,8 +1843,12 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
     SetValue("genIsFromPromptTau", genIsFromTau);
     SetValue("evtWeightsMC", evtWeightsMC);
     SetValue("MCWeight",MCWeight);
+    SetValue("LHEweightorig",LHEweightorig);
     SetValue("LHEWeights",LHEweights);
     SetValue("LHEWeightIDs",LHEweightids);
+    SetValue("NewPDFids", NewPDFids);
+    SetValue("NewPDFweights", NewPDFweights);
+    SetValue("NewPDFweightsBase", NewPDFweightsBase);
     SetValue("genPMotherHasC",genPMotherHasC);
     SetValue("genPMotherHasB",genPMotherHasB);
     SetValue("genPMother",genPMother);
