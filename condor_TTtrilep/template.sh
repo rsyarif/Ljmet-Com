@@ -51,8 +51,24 @@ eval `scramv1 runtime -sh`
 
 cd -
 
+SECONDS=0
+echo '----------------'
+echo 'Start timing'
+echo '----------------'
+echo
+
+
 echo "Running producer"
 cmsRun producer_${PREFIX}_${JOBID}.py
+
+let "hrs=$SECONDS/60/60"
+let "min=$SECONDS/60 - $hrs*60"
+let "sec=$SECONDS - $hrs*60*60 - $min*60"
+echo
+echo '--------------CMSRUN DONE---------------------'
+echo 'time elapsed : '$hrs' hrs '$min' min '$sec' sec'
+echo '----------------------------------------------'
+
 
 echo "Sleeping for one minute..."
 sleep 60
@@ -61,6 +77,16 @@ sleep 60
 sed -i "s|CONDOR_RELBASE|$PWD/$INPUTTAR|" ${PREFIX}_${JOBID}.py
 ljmet ${PREFIX}_${JOBID}.py
 
+let "hrs=$SECONDS/60/60"
+let "min=$SECONDS/60 - $hrs*60"
+let "sec=$SECONDS - $hrs*60*60 - $min*60"
+echo
+echo '--------------LJMET DONE----------------------'
+echo 'time elapsed : '$hrs' hrs '$min' min '$sec' sec'
+echo '----------------------------------------------'
+
+
+echo
 echo "Deleting the mediator MiniAOD file"
 rm mediator*.root
 
