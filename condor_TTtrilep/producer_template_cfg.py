@@ -157,6 +157,43 @@ process.ecalBadCalibReducedMINIAODFilter = cms.EDFilter(
     debug = cms.bool(False)
     )
 
+#added by rizki
+process.skimMiniAOD = cms.EDFilter(
+	"SkimMiniAOD",
+	debug					= cms.bool(False),
+	
+	filter_by_minLeptons	= cms.bool(True),
+	muonCollection 			= cms.InputTag("slimmedMuons"),
+	electronCollection		= cms.InputTag("slimmedElectrons"),
+	minLeptons				= cms.int32(3),
+
+	filter_by_HLT			= cms.bool(True),
+	HLT						= cms.InputTag("TriggerResults","","HLT"),
+    HLTpaths 				= cms.vstring(
+    	#MuMu        
+        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v',    #exists in 2017  (PreScaled!)        
+        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v',  #exists in 2017 (PreScaled!)        
+        'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8_v',                      
+        'HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v',           
+        'HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v',        
+    	#ElEl
+        'HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v',  #exists in 2017    
+        'HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v', #exists in 2017        
+		#MuEl
+        'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v',   #exists in 2017 
+		'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ', #exists in 2017 
+        'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v', #exists in 2017  
+        'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v',  #exists in 2017
+        #for trig efficiency
+        'HLT_IsoMu24_v',
+        'HLT_IsoTkMu24_v',
+        'HLT_IsoMu27_v',
+        'HLT_Ele27_WPTight_Gsf_v',
+        'HLT_Ele35_WPTight_Gsf_v',
+        ),
+	
+	)
+
 ## Produce the ttbar generator level matching
 if options.isTTbar == True:
     process.load("PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff")
@@ -197,13 +234,15 @@ if options.isTTbar == True:
                          process.ttbarcat
                          )
 else:
-    process.p = cms.Path(process.fullPatMetSequenceModifiedMET * 
-                         process.prefiringweight * 
-                         process.egammaPostRecoSeq * 
-#                          process.updatedJetsAK8PuppiSoftDropPacked * 
-#                          process.packedJetsAK8Puppi *
-                         process.ecalBadCalibReducedMINIAODFilter
-                         )
+    process.p = cms.Path(
+    	process.skimMiniAOD *
+        process.fullPatMetSequenceModifiedMET * 
+        process.prefiringweight * 
+        process.egammaPostRecoSeq * 
+#         process.updatedJetsAK8PuppiSoftDropPacked * 
+#         process.packedJetsAK8Puppi *
+        process.ecalBadCalibReducedMINIAODFilter
+    )
 
 ## Keep/Drop
 process.out.outputCommands.append('drop *_*_*_PATtest')
