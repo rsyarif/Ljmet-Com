@@ -75,9 +75,6 @@ private:
     edm::InputTag electronsMiniAODLabel_;
     edm::InputTag eleLooseIdMapLabel_;
     edm::InputTag eleTightIdMapLabel_;
-    // MVA values and categories - added by bjorn
-    std::vector<double>       tightElMVA;
-    std::vector<double>       looseElMVA;
     bool UseElMVA;
 
     edm::InputTag mvaValuesMapLabel_;
@@ -176,12 +173,6 @@ int DileptonCalc::BeginJob()
     //stuff for MVA - added by Bjorn
     if (mPset.exists("UseElMVA")) UseElMVA = mPset.getParameter<bool>("UseElMVA");
     else                          UseElMVA = false;
-
-    if (mPset.exists("tight_electron_mva_cuts")) tightElMVA = mPset.getParameter< std::vector<double> >("tight_electron_mva_cuts");
-    else tightElMVA = {0.96165,8.75794,3.13902,0.93193,8.84606,3.59851,0.88993,10.12423,4.35279};
-
-    if (mPset.exists("loose_electron_mva_cuts")) looseElMVA = mPset.getParameter< std::vector<double> >("loose_electron_mva_cuts");
-    else looseElMVA = {-0.86,-0.81,-0.72};
     
     //get mva vid setup
     //electronsMiniAODLabel_= mPset.getParameter<edm::InputTag>("electronsMiniAOD");
