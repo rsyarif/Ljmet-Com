@@ -1,25 +1,25 @@
 #!/usr/bin/python
 
-import argparse
+import argparse,datetime
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--prefixFile",type=str,help='The name of the file with list of prefixes to use',required=True,nargs=1)
-parser.add_argument("--inputFile",type=str,help='The name of file with list of paths to input files to use', required=True,nargs=1)
+parser.add_argument('--prefixFile',type=str,help='The name of the file with list of prefixes to use',required=True,nargs=1)
+parser.add_argument('--inputFile',type=str,help='The name of file with list of paths to input files to use', required=True,nargs=1)
 args = parser.parse_args()
 
 import os
 import re
 import fileinput
 
-files_per_job = 5
+files_per_job = 1
 
 rel_base = os.environ['CMSSW_BASE']
-cmssw = 'CMSSW_9_4_11'
-# logdir = 'LJMet94x_2lepTT_2017datasets_2018_11_16_rizki' #TEST
-# logdir = 'LJMet94x_2lepTT_2017datasets_2018_11_18_rizki'
-# logdir = 'LJMet94x_2lepTT_2017datasets_2019_1_13_rizki' #More Triggers
-# logdir = 'LJMet94x_2lepTT_2017datasets_2019_2_5_rizki' #More Triggers: HT
-logdir = 'LJMet94x_2lepTT_2017datasets_2019_2_18_rizki' #DoubleMu was still missing
+cmssw = 'CMSSW_9_4_12'
+cTime=datetime.datetime.now()
+date='%i_%i_%i'%(cTime.year,cTime.month,cTime.day)
+logdir = 'LJMet94x_2lepTT_2017datasets_'+date+'_rizki'
+# logdir = 'LJMet94x_2lepTT_2017datasets_'+date+'_rizki_TESTDELETEME'
+# logdir = 'LJMet94x_2lepTT_2017datasets_2019_3_8_rizki'
 outdir = '/eos/uscms/store/group/lpcljm/'+logdir+'/'
 
 ### What is the name of your FWLite Analyzer
@@ -77,11 +77,11 @@ for line in listfile:
 for i in range(len(prefix)):
     print i,' ',prefix[i],' ',dir[i],' ',list[i]
 
-### Write the files you wish to run over for each job    
+### Write the files you wish to run over for each job
 def get_input(num, list):
-    result = '' 
-#     file_list = open(rel_base+"/src/LJMet/Com/python/"+list)
-    file_list = open(rel_base+"/src/LJMet/Com/condor_SSDL/"+list)
+    result = ''
+#     file_list = open(rel_base+'/src/LJMet/Com/python/'+list)
+    file_list = open(rel_base+'/src/LJMet/Com/condor_SSDL/'+list)
     file_count = 0
     for line in file_list:
         if line.find('root')>0:
@@ -123,15 +123,14 @@ for i in range(len(prefix)):
 #     locdir = logdir+'/'+prefix[i]
     os.system('mkdir -p  %s' %locdir)
 
-        
+
     FLAGTAG = 'TriggerResults::PAT'
-    
+
     print 'CONDOR work dir: '+dir[i]
     #os.system('rm -rf '+dir[i])
     #os.system('mkdir -p '+dir[i])
 
-#     file_list = open(rel_base+"/src/LJMet/Com/python/"+list[i])
-    file_list = open(rel_base+"/src/LJMet/Com/condor_SSDL/"+list[i])
+    file_list = open(rel_base+'/src/LJMet/Com/condor_SSDL/'+list[i])
     count = 0
     for line in file_list:
         if line.find('root')>0:
@@ -142,21 +141,43 @@ for i in range(len(prefix)):
     print 'File prefix: '+prefix[i]
     print 'Number of input files: '+str(count)
 
-    while ( nfiles <= count ):    
+    while ( nfiles <= count ):
+    
+    	fname_job = prefix[i]+'_'+str(j)
 
-        py_templ_file = open(rel_base+"/src/LJMet/Com/condor_SSDL/Dilepton_MC_python.templ")
-        condor_templ_file = open(rel_base+"/src/LJMet/Com/condor_SSDL/condor.templ")
-        csh_templ_file    = open(rel_base+"/src/LJMet/Com/condor_SSDL/csh.templ")
+        singleFileList = get_input(nfiles, list[i])
+        mediatorFile = 'mediator_'+fname_job+'.root'
+
+        producer_templ_file = open(rel_base+'/src/LJMet/Com/condor_SSDL/producer_template_cfg.py')
+        prodpy = 'producer_'+fname_job+'.py'
+        localprodfile = locdir+'/'+prodpy
+        producer_file = open(localprodfile,'w')
+        for line in producer_templ_file:
+            line=line.replace('CONDOR_FILELIST', singleFileList)
+            line=line.replace('CONDOR_ISMC', str('True'))
+            line=line.replace('CONDOR_ISTTBAR', str('False'))
+            line=line.replace('CONDOR_MEDIATOR', mediatorFile)
+            producer_file.write(line)
+        producer_file.close()
+        producer_templ_file.close()
+
+        #copy file to eos
+        eosprodfile =   'root://cmseos.fnal.gov/'+dir[i]+'/'+prodpy
+        os.system('xrdcp -f %s %s'  % (localprodfile,eosprodfile))
+
+        py_templ_file = open(rel_base+'/src/LJMet/Com/condor_SSDL/Dilepton_MC_templ.py')
+        condor_templ_file = open(rel_base+'/src/LJMet/Com/condor_SSDL/condor.templ')
+        bash_templ_file    = open(rel_base+'/src/LJMet/Com/condor_SSDL/bash.templ')
 
         #open local version of file
-        localfile=locdir+'/'+prefix[i]+"_"+str(j)+".py"
-        runpy = prefix[i]+"_"+str(j)+".py"
-        py_file = open(localfile,"w")
+        runpy = fname_job+'.py'
+        localfile=locdir+'/'+fname_job+'.py'
+        py_file = open(localfile,'w')
         for line in py_templ_file:
             line=line.replace('DIRECTORY',dir[i])
             line=line.replace('PREFIX',prefix[i])
             line=line.replace('JOBID',str(j))
-            line=line.replace('INFILES',get_input(nfiles, list[i]))
+            line=line.replace('INFILES',mediatorFile)
             line=line.replace('BTAGUNCERTUP',BTAGUNCERTUP)
             line=line.replace('BTAGUNCERTDOWN',BTAGUNCERTDOWN)
             line=line.replace('JECUNCERTUP',JECUNCERTUP)
@@ -170,14 +191,12 @@ for i in range(len(prefix)):
         py_file.close()
 
         #copy file to eos
-        eosfile =   "root://cmseos.fnal.gov/"+dir[i]+"/"+prefix[i]+"_"+str(j)+".py"
-        os.system("xrdcp -f %s %s"  % (localfile,eosfile))
-        #remove local version
-        #os.system('rm -v %s python_cfgs/MC/' % localfile)
+        eosfile =   'root://cmseos.fnal.gov/'+dir[i]+'/'+fname_job+'.py'
+        os.system('xrdcp -f %s %s'  % (localfile,eosfile))
 
-        localcondor = locdir+'/'+prefix[i]+"_"+str(j)+".condor"
-        eoscondor = "root://cmseos.fnal.gov/"+dir[i]+"/"+prefix[i]+"_"+str(j)+".condor"
-        condor_file = open(localcondor,"w")
+        localcondor = locdir+'/'+fname_job+'.condor'
+        eoscondor = 'root://cmseos.fnal.gov/'+dir[i]+'/'+fname_job+'.condor'
+        condor_file = open(localcondor,'w')
         for line in condor_templ_file:
             line=line.replace('DIRECTORY',locdir)
             line=line.replace('PREFIX',prefix[i])
@@ -185,17 +204,13 @@ for i in range(len(prefix)):
             condor_file.write(line)
         condor_file.close()
 
-        #copy local to eos
-        #os.system('xrdcp -f %s %s' % (localcondor,eoscondor))
-        #remove local copy
-        #os.system('rm %s' % localcondor)
 
-        eoscsh="root://cmseos.fnal.gov/"+dir[i]+"/"+prefix[i]+"_"+str(j)+".csh"
-        localcsh=locdir+'/'+prefix[i]+"_"+str(j)+".csh"
-        eosoutput="root://cmseos.fnal.gov/"+dir[i]+"/"+prefix[i]+'_'+str(j)+'.root'
-        locoutput = prefix[i]+'_'+str(j)+'.root'
-        csh_file = open(localcsh,"w")
-        for line in csh_templ_file:
+        eosbash='root://cmseos.fnal.gov/'+dir[i]+'/'+fname_job+'.sh'
+        localbash=locdir+'/'+fname_job+'.sh'
+        eosoutput='root://cmseos.fnal.gov/'+dir[i]+'/'+fname_job+'.root'
+        locoutput = fname_job+'.root'
+        bash_file = open(localbash,'w')
+        for line in bash_templ_file:
             line=line.replace('CMSSWBASE',rel_base)
             line=line.replace('DIRECTORY',dir[i])
             line=line.replace('PREFIX',prefix[i])
@@ -207,21 +222,19 @@ for i in range(len(prefix)):
             line=line.replace('EOSOUT',eosoutput)
             line=line.replace('LOCOUT',locoutput)
             line=line.replace('TARDIR',logdir)
-            csh_file.write(line)
-        csh_file.close()
+            line=line.replace('EOSPRODPY',eosprodfile)
+            line=line.replace('LOCPRODPY',prodpy)
+            bash_file.write(line)
+        bash_file.close()
 
-        #os.system('xrdcp -f %s %s' % (localcsh,eoscsh))
-        #os.system('rm %s' %localcsh)
-
-        os.system('chmod u+x '+locdir+'/'+prefix[i]+'_'+str(j)+'.csh')
-        print 'condor file is: '+locdir+'/'+prefix[i]+'_'+str(j)+'.condor;'
+        os.system('chmod u+x '+locdir+'/'+fname_job+'.sh')
+        print 'condor file is: '+locdir+'/'+fname_job+'.condor;'
         os.system(' condor_submit %s' % localcondor)
-        #os.system('cd '+dir[i]+'; condor_submit '+prefix[i]+'_'+str(j)+'.condor; cd -')
         j = j + 1
         nfiles = nfiles + files_per_job
         py_templ_file.close()
         condor_templ_file.close()
-        csh_templ_file.close()
+        bash_templ_file.close()
 
     #print  str(j-1)+' jobs submitted'
-    
+

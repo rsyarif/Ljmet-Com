@@ -23,7 +23,8 @@ process.subProcesses = cms.PSet()
 #
 process.ljmet = cms.PSet(
     isMc = cms.bool(False),
-    runs = cms.vint32([])
+    runs = cms.vint32([]),
+    verbosity = cms.int32(1),
 )
 
 process.ljmet.excluded_calculators = cms.vstring(
@@ -33,7 +34,7 @@ process.ljmet.excluded_calculators = cms.vstring(
 	'PdfCalc',
 	'ChargedHiggsCalc',
 	'TprimeCalc',
-	#'TpTpCalc', #need to turn on for TT samples
+	'TpTpCalc', #need to turn on for TT samples
 	'LjetsTopoCalc',
 	'WprimeCalc',
         'WprimeBoostedCalc',
@@ -50,6 +51,9 @@ process.JetSubCalc.isMc = cms.bool(False)
 process.DileptonCalc.isMc     = process.ljmet.isMc
 process.DileptonCalc.dataType = cms.string('All')
 process.DileptonCalc.UseElMVA = cms.bool(True)
+process.DileptonCalc.OverrideLHEWeights = cms.bool(True)
+process.DileptonCalc.basePDFname = cms.string('NNPDF31_nnlo_as_0118_nf_4')
+process.DileptonCalc.newPDFname = cms.string('NNPDF31_lo_as_0118')
 
 # BestCalc options
 process.load('LJMet.Com.BestCalc_cfi')
@@ -72,40 +76,13 @@ process.event_selector = cms.PSet(
 
     #Can use same trigger paths for data and MC since MC is always one of the data versions
     trigger_path_ee          = cms.vstring(
-#     'HLT_Ele17_CaloIdL_GsfTrkIdVL_v', #used in 2016 #doesnt exist in 2017
-#     'HLT_Ele17_CaloIdL_TrackIdL_IsoVL_v', #used in 2016 #doesnt exist in 2017
     'HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
     'HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
     'HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
 
-#     'HLT_Ele20_WPTight_Gsf_v',
-    'HLT_Ele20_WPLoose_Gsf_v',
-    'HLT_Ele20_eta2p1_WPLoose_Gsf_v',
-    'HLT_Ele27_WPTight_Gsf_v',
-    'HLT_Ele32_WPTight_Gsf_v',
-    'HLT_Ele35_WPTight_Gsf_v',
-    'HLT_Ele35_WPTight_Gsf_L1EGMT_v',
-    'HLT_Ele38_WPTight_Gsf_v',
-    'HLT_Ele40_WPTight_Gsf_v',
-    'HLT_Ele32_WPTight_Gsf_L1DoubleEG_v',
-    'HLT_Ele30_eta2p1_WPTight_Gsf_CentralPFJet35_EleCleaned_v',
-    'HLT_Ele28_eta2p1_WPTight_Gsf_HT150_v',
-    'HLT_Ele28_HighEta_SC20_Mass55_v',
-#     'HLT_Ele15_IsoVVVL_PFHT450_CaloBTagCSV_4p5_v',
-#     'HLT_Ele15_IsoVVVL_PFHT450_PFMET50_v',
-#     'HLT_Ele15_IsoVVVL_PFHT450_v',
-#     'HLT_Ele50_IsoVVVL_PFHT450_v',
-#     'HLT_Ele15_IsoVVVL_PFHT600_v',
     'HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v',
     'HLT_Ele17_CaloIdM_TrackIdM_PFJet30_v',
     'HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v',
-#     'HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165_v',
-#     'HLT_Ele115_CaloIdVT_GsfTrkIdT_v',
-#     'HLT_Ele135_CaloIdVT_GsfTrkIdT_v',
-#     'HLT_Ele145_CaloIdVT_GsfTrkIdT_v',
-#     'HLT_Ele200_CaloIdVT_GsfTrkIdT_v',
-#     'HLT_Ele250_CaloIdVT_GsfTrkIdT_v',
-#     'HLT_Ele300_CaloIdVT_GsfTrkIdT_v',
 
 
     ),
@@ -114,7 +91,7 @@ process.event_selector = cms.PSet(
     'HLT_Mu8_v',
     'HLT_Mu17_v',
     'HLT_Mu19_v',
-    'HLT_Mu3_PFJet40_v12',
+    'HLT_Mu3_PFJet40_v',
     'HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
     'HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
     'HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
@@ -164,22 +141,6 @@ process.event_selector = cms.PSet(
     electron_maxeta          = cms.double(2.4),
     max_electron             = cms.int32(10),
     UseElMVA                 = cms.bool(True),
-    tight_electron_mva_cuts  = cms.vdouble(0.96165,8.75794,3.13902,0.93193,8.84606,3.59851,0.88993,10.12423,4.35279), # Fall17 noiso WP90 c, tau, A for EB1, EB2, and then EE
-    loose_electron_mva_cuts  = cms.vdouble(-0.86,-0.81,-0.72), # Fall17 noiso WP HZZ exact cuts
-    #tight_electron_mva_cuts  = cms.vdouble(0.97177,8.91285,1.97124,0.945875,8.83104,2.40850,0.89791,9.81408,4.17158), # Fall17 iso WP90 c, tau, A for EB1, EB2, and then EE
-    #loose_electron_mva_cuts  = cms.vdouble(-0.83,-0.77,-0.69), # Fall17 iso WP HZZ exact cuts
-
-    ElMVAweightFiles = cms.vstring(
-        relBase+'/src/LJMet/Com/weights/EIDmva_EB1_10_2017_puinfo_BDT.weights.xml',
-        relBase+'/src/LJMet/Com/weights/EIDmva_EB2_10_2017_puinfo_BDT.weights.xml',
-        relBase+'/src/LJMet/Com/weights/EIDmva_EE_10_2017_puinfo_BDT.weights.xml',
-        ),
-
-    ElMVAweightFiles_iso = cms.vstring(
-        relBase+'/src/LJMet/Com/weights/EIDmva_EB1_10_2017_puinfo_iso_BDT.weights.xml',
-        relBase+'/src/LJMet/Com/weights/EIDmva_EB2_10_2017_puinfo_iso_BDT.weights.xml',
-        relBase+'/src/LJMet/Com/weights/EIDmva_EE_10_2017_puinfo_iso_BDT.weights.xml',
-        ),
 
     min_lepton               = cms.int32(1),
 
@@ -201,14 +162,15 @@ process.event_selector = cms.PSet(
     jet_collection           = cms.InputTag('slimmedJets'),
     slimmedJetsAK8           = cms.InputTag('slimmedJetsAK8'),
     muon_collection          = cms.InputTag('slimmedMuons'),
-    electron_collection      = cms.InputTag('slimmedElectrons'),
+#     electron_collection      = cms.InputTag('slimmedElectrons'),
+    electron_collection      = cms.InputTag('slimmedElectrons::PATtest'), #if using producer
     met_collection           = cms.InputTag('slimmedMETs'),
 
     # Jet corrections are read from txt files which need updating!
-    JEC_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017_V6_MC_Uncertainty_AK4PFchs.txt'),
-    JERSF_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Spring16V10/Spring16_25nsV10_MC_SF_AK4PFchs.txt'),
-    JER_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Spring16V10/Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt'),
-    JERAK8_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Spring16V10/Spring16_25nsV10_MC_PtResolution_AK8PFchs.txt'),
+    JEC_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017_V32_MC_Uncertainty_AK4PFchs.txt'),
+    JERSF_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Fall17V3/Fall17_V3_MC_SF_AK4PFchs.txt'),
+    JER_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Fall17V3/Fall17_V3_MC_PtResolution_AK4PFchs.txt'),
+    JERAK8_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Fall17V3/Fall17_V3_MC_PtResolution_AK8PFPuppi.txt'),
 
     JECup		     = cms.bool(False),
     JECdown                  = cms.bool(False),
@@ -219,23 +181,23 @@ process.event_selector = cms.PSet(
     doNewJEC                 = cms.bool(True),
     doLepJetCleaning         = cms.bool(True),
 
-    MCL1JetPar               = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017_V6_MC_L1FastJet_AK4PFchs.txt'),
-    MCL2JetPar               = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017_V6_MC_L2Relative_AK4PFchs.txt'),
-    MCL3JetPar               = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017_V6_MC_L3Absolute_AK4PFchs.txt'),
+    MCL1JetPar               = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017_V32_MC_L1FastJet_AK4PFchs.txt'),
+    MCL2JetPar               = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017_V32_MC_L2Relative_AK4PFchs.txt'),
+    MCL3JetPar               = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017_V32_MC_L3Absolute_AK4PFchs.txt'),
 
-    MCL1JetParAK8            = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017_V6_MC_L1FastJet_AK8PFPuppi.txt'),
-    MCL2JetParAK8            = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017_V6_MC_L2Relative_AK8PFPuppi.txt'),
-    MCL3JetParAK8            = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017_V6_MC_L3Absolute_AK8PFPuppi.txt'),
+    MCL1JetParAK8            = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017_V32_MC_L1FastJet_AK8PFPuppi.txt'),
+    MCL2JetParAK8            = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017_V32_MC_L2Relative_AK8PFPuppi.txt'),
+    MCL3JetParAK8            = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFPuppi.txt'),
 
-    DataL1JetPar             = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017B_V6_DATA_L1FastJet_AK4PFchs.txt'),
-    DataL2JetPar             = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017B_V6_DATA_L2Relative_AK4PFchs.txt'),
-    DataL3JetPar             = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017B_V6_DATA_L3Absolute_AK4PFchs.txt'),
-    DataResJetPar            = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017B_V6_DATA_L2L3Residual_AK4PFchs.txt'),
+    DataL1JetPar             = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017B_V32_DATA_L1FastJet_AK4PFchs.txt'),
+    DataL2JetPar             = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017B_V32_DATA_L2Relative_AK4PFchs.txt'),
+    DataL3JetPar             = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017B_V32_DATA_L3Absolute_AK4PFchs.txt'),
+    DataResJetPar            = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017B_V32_DATA_L2L3Residual_AK4PFchs.txt'),
 
-    DataL1JetParAK8          = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017B_V6_DATA_L1FastJet_AK8PFPuppi.txt'),
-    DataL2JetParAK8          = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017B_V6_DATA_L2Relative_AK8PFPuppi.txt'),
-    DataL3JetParAK8          = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017B_V6_DATA_L3Absolute_AK8PFPuppi.txt'),
-    DataResJetParAK8         = cms.string(relBase+'/src/LJMet/Com/data/Fall17V6/Fall17_17Nov2017B_V6_DATA_L2L3Residual_AK8PFPuppi.txt'),
+    DataL1JetParAK8          = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017B_V32_DATA_L1FastJet_AK8PFPuppi.txt'),
+    DataL2JetParAK8          = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017B_V32_DATA_L2Relative_AK8PFPuppi.txt'),
+    DataL3JetParAK8          = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017B_V32_DATA_L3Absolute_AK8PFPuppi.txt'),
+    DataResJetParAK8         = cms.string(relBase+'/src/LJMet/Com/data/Fall17V32/Fall17_17Nov2017B_V32_DATA_L2L3Residual_AK8PFPuppi.txt'),
 
 
     #triggerstudy info
@@ -257,7 +219,7 @@ process.inputs = cms.PSet (
    skipEvents = cms.int32(0),
    lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange()),
        fileNames  = cms.vstring(
-		'root://cmsxrootd.fnal.gov//store/data/Run2017F/DoubleEG/MINIAOD/31Mar2018-v1/90000/D6EA3264-FA36-E811-B2A6-0025904C66EC.root',
+		'mediator_DoubleEG_Run2017F_test_producer_Data_FakeRate.root'
      )
 )
 
@@ -282,7 +244,7 @@ except: scratchDir='.'
 if not os.path.isdir(scratchDir): os.system("mkdir -p "+scratchDir)
 process.outputs = cms.PSet (
     #outputName = cms.string(scratchDir+'/PREFIX_JOBID'),
-    outputName = cms.string('DoubleEG_Run2017F_testData_FakeRate'),
+    outputName = cms.string('MuonEG_Run2017F_testData_FakeRate'),
     treeName   = cms.string('ljmet'),
 )
 

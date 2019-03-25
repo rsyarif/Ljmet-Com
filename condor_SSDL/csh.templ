@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/bash
 #
 # Template of the shell script for submitting a CONDOR job
 #
@@ -40,6 +40,15 @@ scram b
 # cmsenv
 eval `scramv1 runtime -csh`
 
+
+echo "Running cmsRun"
+cmsRun producer_PREFIX_JOBID.py
+
+
+echo "Sleeping for one minute..."
+sleep 60
+
+
 #check ljmet
 which FWLITEANALYZER
 
@@ -66,9 +75,15 @@ which FWLITEANALYZER
 
 rehash
 
-xrdcp EOSPY LOCPY
+# xrdcp EOSPY LOCPY
 
 FWLITEANALYZER LOCPY
+
+
+echo
+echo "Deleting the mediator MiniAOD file"
+rm mediator*.root
+
 
 #move output to eos
 xrdcp -f LOCOUT EOSOUT

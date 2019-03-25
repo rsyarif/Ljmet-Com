@@ -5,7 +5,6 @@ import os
 
 #Arguments from condor submit script which are used more than once
 relBase    = os.environ['CMSSW_BASE']
-condorJSON = str('none')
 
 # Define the base process
 process = cms.Process("LJMetCom")
@@ -22,9 +21,8 @@ process.subProcesses = cms.PSet()
 # FWLite application options
 #
 process.ljmet = cms.PSet(
-    isMc = cms.bool(True),
-    runs = cms.vint32([]),
-    verbosity = cms.int32(1),
+    isMc = cms.bool(False),
+    runs = cms.vint32([])
 )
 
 process.ljmet.excluded_calculators = cms.vstring(
@@ -34,26 +32,24 @@ process.ljmet.excluded_calculators = cms.vstring(
 	'PdfCalc',
 	'ChargedHiggsCalc',
 	'TprimeCalc',
-	#'TpTpCalc', #need to turn on for TT samples
+	'TpTpCalc', #need to turn on for TT samples
 	'LjetsTopoCalc',
 	'WprimeCalc',
         'WprimeBoostedCalc',
 	'singleLepCalc',
         'BTagSFCalc',
         'CATopoCalc',
-	)
+	) 
 
 # Jet substructure calculator options
 process.load('LJMet.Com.JetSubCalc_cfi')
 process.JetSubCalc.killHF = cms.bool(False)
-process.JetSubCalc.isMc = cms.bool(True)
+process.JetSubCalc.isMc = process.ljmet.isMc
 
 process.DileptonCalc.isMc     = process.ljmet.isMc
-process.DileptonCalc.dataType = cms.string('ElMu')
+process.DileptonCalc.dataType = cms.string('All')
 process.DileptonCalc.UseElMVA = cms.bool(True)
-process.DileptonCalc.OverrideLHEWeights = cms.bool(True)
-process.DileptonCalc.basePDFname = cms.string('NNPDF31_nnlo_as_0118_nf_4')
-process.DileptonCalc.newPDFname = cms.string('NNPDF31_lo_as_0118')
+
 
 # BestCalc options
 process.load('LJMet.Com.BestCalc_cfi')
@@ -66,48 +62,47 @@ process.BestCalc.dnnFile = cms.string(relBase+'/src/LJMet/Com/data/BEST_mlp.json
 process.event_selector = cms.PSet(
 
     selection = cms.string('DileptonSelector'),
-    isMc              = cms.bool(True),
-    keepFullMChistory = cms.bool(True),
-    debug             = cms.bool(True),
+    isMc              = cms.bool(False),
+    keepFullMChistory = cms.bool(False),
+    debug             = cms.bool(False),
     # cuts
     #HLT
     trigger_cut              = cms.bool(True),
-    dump_trigger             = cms.bool(True),
+    dump_trigger             = cms.bool(False),
 
     #Can use same trigger paths for data and MC since MC is always one of the data versions
     trigger_path_ee          = cms.vstring(
-    'HLT_DoubleEle33_CaloIdL_MW_v',
-    'HLT_DoubleEle27_CaloIdL_MW_v',
-    'HLT_DoubleEle25_CaloIdL_MW_v',
-    'HLT_Ele27_Ele37_CaloIdL_MW_v',
+    'HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
+    'HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
+    'HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
 
-    'HLT_DoubleEle24_eta2p1_WPTight_Gsf_v',
-    'HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_DZ_PFHT350_v',
-    'HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT350_v',
-    'HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v',
-    'HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v',
+    'HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v',
+    'HLT_Ele17_CaloIdM_TrackIdM_PFJet30_v',
+    'HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v',
+
 
     ),
     
     trigger_path_em          = cms.vstring(
-    'HLT_Mu37_Ele27_CaloIdL_MW_v',
-    'HLT_Mu27_Ele37_CaloIdL_MW_v',
-
-    'HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT350_DZ_v',
-    'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v',
-    'HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT350_v',
-    'HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v',
-    'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v',
-    'HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v',
-    'HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v',
-    'HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v',
+    'HLT_Mu8_v',
+    'HLT_Mu17_v',
+    'HLT_Mu19_v',
+    'HLT_Mu3_PFJet40_v',
+    'HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
+    'HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
+    'HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v',
     ),
 
     trigger_path_mm          = cms.vstring(
-    'HLT_Mu37_TkMu27_v',
-    'HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8_v',
-    'HLT_DoubleMu8_Mass8_PFHT350_v',
-    'HLT_DoubleMu4_Mass8_DZ_PFHT350_v',
+    'HLT_Mu8_v',
+    'HLT_Mu17_v',
+    'HLT_Mu19_v',
+    'HLT_Mu20_v',
+    'HLT_Mu27_v',
+    'HLT_Mu8_TrkIsoVVL_v',
+    'HLT_Mu17_TrkIsoVVL_v',
+    'HLT_Mu19_TrkIsoVVL_v',
+    'HLT_Mu3_PFJet40_v',
     ),
 
     pv_cut                   = cms.bool(True),
@@ -118,15 +113,15 @@ process.event_selector = cms.PSet(
     ecalTP_cut               = cms.bool(True),
     goodVtx_cut              = cms.bool(True),
     badMuon_cut              = cms.bool(True),
-    badChargedHadron_cut     = cms.bool(True),
-    flag_tag                 = cms.InputTag('TriggerResults::PAT'),
+    badChargedHadron_cut     = cms.bool(True),    			     
+    flag_tag                 = cms.InputTag('FLAGTAG'),
     cscHalo_cut              = cms.bool(True),
 
     metfilters     = cms.bool(True),
 
     jet_cuts                 = cms.bool(False),
     jet_minpt                = cms.double(30.0),
-    jet_maxeta               = cms.double(5.0),
+    jet_maxeta               = cms.double(2.4),
     min_jet                  = cms.int32(4),
     max_jet                  = cms.int32(4000),
 
@@ -143,7 +138,7 @@ process.event_selector = cms.PSet(
     max_electron             = cms.int32(10),
     UseElMVA                 = cms.bool(True),
 
-    min_lepton               = cms.int32(2),
+    min_lepton               = cms.int32(1),
 
     met_cuts                 = cms.bool(False),
     min_met                  = cms.double(0.0),
@@ -173,10 +168,11 @@ process.event_selector = cms.PSet(
     JER_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Fall17V3/Fall17_V3_MC_PtResolution_AK4PFchs.txt'),
     JERAK8_txtfile = cms.string(relBase+'/src/LJMet/Com/data/Fall17V3/Fall17_V3_MC_PtResolution_AK8PFPuppi.txt'),
 
-    JECup		     = cms.bool(False),
-    JECdown                  = cms.bool(False),
-    JERup                    = cms.bool(False),
-    JERdown                  = cms.bool(False),
+    #This is for uncertainty calculations   
+    JECup      	             = cms.bool(JECUNCERTUP),
+    JECdown                  = cms.bool(JECUNCERTDOWN),
+    JERup                    = cms.bool(JERUNCERTUP),
+    JERdown                  = cms.bool(JERUNCERTDOWN),
 
     #new jet energy corrections
     doNewJEC                 = cms.bool(True),
@@ -216,41 +212,36 @@ process.event_selector = cms.PSet(
 
 
 process.inputs = cms.PSet (
-   nEvents    = cms.int32(500),
-   skipEvents = cms.int32(0),
+   nEvents    = cms.int32(EVENTSTOPROCESS),
+   skipEvents = cms.int32(0),	
    lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange()),
        fileNames  = cms.vstring(
-       			'mediator_TprimeTprime_M-1100_TuneCP5_13TeV-madgraph-pythia8_test_producer_MC.root',
-
-     )
+	'INFILES'
+     ) 
 )
 
 
 
 # JSON
 if (not process.ljmet.isMc==cms.bool(True)):
-    JsonFile = ''
+    JsonFile = relBase+'/src/LJMet/Com/data/json/'+JSONFILE
     myList   = LumiList.LumiList(filename=JsonFile).getCMSSWString().split(',')
     process.inputs.lumisToProcess.extend(myList)
-
-
-
+       
+        
+        
 #######################################################
 #
 # Output
 #
-
-import datetime
-cTime=datetime.datetime.now()
-date='%i_%i_%i'%(cTime.year,cTime.month,cTime.day)
 
 import os
 try: scratchDir=os.environ['_CONDOR_SCRATCH_DIR']
 except: scratchDir='.'
 if not os.path.isdir(scratchDir): os.system("mkdir -p "+scratchDir)
 process.outputs = cms.PSet (
-    #outputName = cms.string(scratchDir+'/TprimeTprime_M-1500_13'),
-    outputName = cms.string('TprimeTprime_M-1100_testMC_'+date),
+    #outputName = cms.string(scratchDir+'/PREFIX_JOBID'),
+    outputName = cms.string('PREFIX_JOBID'),
     treeName   = cms.string('ljmet'),
 )
 
@@ -267,6 +258,6 @@ process.pvSelector.maxZ    = cms.double(24.0)
 process.pvSelector.maxRho  = cms.double(2.0)
 
 # jets
-process.load('PhysicsTools.SelectorUtils.pfJetIDSelector_cfi')
+process.load('PhysicsTools.SelectorUtils.pfJetIDSelector_cfi') 
 process.pfJetIDSelector.version = cms.string('FIRSTDATA')
 process.pfJetIDSelector.quality = cms.string('LOOSE')

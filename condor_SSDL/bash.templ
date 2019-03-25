@@ -1,0 +1,93 @@
+#!/bin/bash
+#
+# Template of the shell script for submitting a CONDOR job
+#
+# Need to be substituted:
+#    - C M S S W B A S E - local release base ($CMSSW_BASE)
+#    - D I R E C T O R Y - condor work and output dir
+#    - P R E F I X - some generic name for the set of jobs (like ttbar, wjets)
+#    - J O B I D  - job number
+#
+#
+#_____ setup the environment ____________________________________________
+#
+
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+export SCRAM_ARCH=slc6_amd64_gcc630
+
+echo "make new scram area 'cmsrel'"
+scramv1 project CMSSWVERSION
+cd CMSSWVERSION/
+cd src
+
+xrdcp root://cmseos.fnal.gov//store/group/lpcljm/TARDIR/ljmet.tar ./ljmet.tar
+tar -xf ljmet.tar
+
+echo "Where am I?"
+pwd
+
+echo "Who's there?"
+ls -lth
+
+#remove tar 
+rm -v ljmet.tar
+
+#compile
+scram b
+
+echo "executing 'cmsenv'"
+eval `scramv1 runtime -sh`
+
+xrdcp EOSPRODPY ./LOCPRODPY
+ls LOCPRODPY
+
+
+SECONDS=0
+echo '----------------'
+echo 'Start timing'
+echo '----------------'
+echo
+
+echo "Running cmsRun"
+cmsRun producer_PREFIX_JOBID.py
+
+let "hrs=$SECONDS/60/60"
+let "min=$SECONDS/60 - $hrs*60"
+let "sec=$SECONDS - $hrs*60*60 - $min*60"
+echo
+echo '--------------CMSRUN DONE---------------------'
+echo 'time elapsed : '$hrs' hrs '$min' min '$sec' sec'
+echo '----------------------------------------------'
+
+
+echo "Sleeping for one minute..."
+sleep 60
+
+echo 'check what files there are'
+ls -lth
+
+#check ljmet
+which FWLITEANALYZER
+
+xrdcp EOSPY LOCPY
+ls LOCPY
+
+FWLITEANALYZER LOCPY
+
+
+let "hrs=$SECONDS/60/60"
+let "min=$SECONDS/60 - $hrs*60"
+let "sec=$SECONDS - $hrs*60*60 - $min*60"
+echo
+echo '--------------LJMET DONE----------------------'
+echo 'time elapsed : '$hrs' hrs '$min' min '$sec' sec'
+echo '----------------------------------------------'
+
+
+echo
+echo "Deleting the mediator MiniAOD file"
+rm mediator*.root
+
+
+#move output to eos
+xrdcp -f LOCOUT EOSOUT
