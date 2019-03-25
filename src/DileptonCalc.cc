@@ -268,6 +268,8 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
     bool HLT_Mu37_TkMu27=false;
     bool HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8=false;
     bool HLT_DoubleMu8_Mass8_PFHT350=false;
+    bool HLT_DoubleMu4_Mass8_DZ_PFHT350=false;
+
 
 	//cross
     bool HLT_Mu37Ele27=false;
@@ -293,6 +295,10 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
     bool HLT_Mu17_TrkIsoVVL=false;
     bool HLT_Mu19_TrkIsoVVL=false;
     bool HLT_Mu3_PFJet40=false;
+    bool HLT_IsoMu24=false;
+    bool HLT_IsoTkMu24=false;
+    bool HLT_IsoMu27=false;
+    
 
 	//single el
     bool HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v=false;
@@ -344,6 +350,7 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
 	  if(Path.find("HLT_Mu37_TkMu27_v")!=std::string::npos) HLT_Mu37_TkMu27=true;
 	  if(Path.find("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8")!=std::string::npos) HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8=true;
 	  if(Path.find("HLT_DoubleMu8_Mass8_PFHT350")!=std::string::npos) HLT_DoubleMu8_Mass8_PFHT350=true;
+	  if(Path.find("HLT_DoubleMu4_Mass8_DZ_PFHT350")!=std::string::npos) HLT_DoubleMu4_Mass8_DZ_PFHT350=true;
 
 	  //cross paths	      
 	  if(Path.find("HLT_Mu37_Ele27_CaloIdL_MW_v")!=std::string::npos) HLT_Mu37Ele27=true;
@@ -369,6 +376,9 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
 	  if(Path.find("HLT_Mu17_TrkIsoVVL_v")!=std::string::npos) HLT_Mu17_TrkIsoVVL=true;
 	  if(Path.find("HLT_Mu19_TrkIsoVVL_v")!=std::string::npos) HLT_Mu19_TrkIsoVVL=true;
 	  if(Path.find("HLT_Mu3_PFJet40_v")!=std::string::npos) HLT_Mu3_PFJet40=true;
+	  if(Path.find("HLT_IsoMu24_v")!=std::string::npos) HLT_IsoMu24=true;
+	  if(Path.find("HLT_IsoTkMu24_v")!=std::string::npos) HLT_IsoTkMu24=true;
+	  if(Path.find("HLT_IsoMu27_v")!=std::string::npos) HLT_IsoMu27=true;
 
 
 	  //control triggers - el
@@ -412,6 +422,7 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
     SetValue("HLT_Mu37_TkMu27",HLT_Mu37_TkMu27);
     SetValue("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8",HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8);
     SetValue("HLT_DoubleMu8_Mass8_PFHT350",HLT_DoubleMu8_Mass8_PFHT350);
+    SetValue("HLT_DoubleMu4_Mass8_DZ_PFHT350",HLT_DoubleMu4_Mass8_DZ_PFHT350);
 
 	//cross
     SetValue("HLT_Mu37Ele27",HLT_Mu37Ele27);
@@ -437,6 +448,9 @@ int DileptonCalc::AnalyzeEvent(edm::EventBase const & event, BaseEventSelector *
     SetValue("HLT_Mu17_TrkIsoVVL",HLT_Mu17_TrkIsoVVL);
     SetValue("HLT_Mu19_TrkIsoVVL",HLT_Mu19_TrkIsoVVL);
     SetValue("HLT_Mu3_PFJet40",HLT_Mu3_PFJet40);
+    SetValue("HLT_IsoMu24",HLT_IsoMu24);
+    SetValue("HLT_IsoTkMu24",HLT_IsoTkMu24);
+    SetValue("HLT_IsoMu27",HLT_IsoMu27);
 
 	//single el
     SetValue("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v",HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v);

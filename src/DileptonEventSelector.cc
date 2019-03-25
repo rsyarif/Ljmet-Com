@@ -216,14 +216,14 @@ void DileptonEventSelector::BeginJob( std::map<std::string, edm::ParameterSet co
     push_back("Trigger");
     push_back("Primary vertex");
     push_back("MET filters");
-    push_back("HBHE noise and scraping filter");
-    push_back("HBHE Iso noise filter");
-    push_back("CSC Tight Halo filter");
-    push_back("EE Bad SC filter");
-    push_back("Ecal Dead TP");
-    push_back("Good Vtx");
-    push_back("Bad Muon");
-    push_back("Bad Charged Hadron");
+//     push_back("HBHE noise and scraping filter");
+//     push_back("HBHE Iso noise filter");
+//     push_back("CSC Tight Halo filter");
+//     push_back("EE Bad SC filter");
+//     push_back("Ecal Dead TP");
+//     push_back("Good Vtx");
+//     push_back("Bad Muon");
+//     push_back("Bad Charged Hadron");
     push_back("Min muon");
     push_back("Max muon");
     push_back("Min electron");
@@ -245,14 +245,14 @@ void DileptonEventSelector::BeginJob( std::map<std::string, edm::ParameterSet co
     set("Primary vertex", mbPar["pv_cut"]);
     set("MET filters", mbPar["metfilters"]);
 
-    set("HBHE noise and scraping filter", mbPar["hbhe_cut"]);
-    set("HBHE Iso noise filter", mbPar["hbheiso_cut"]); 
-    set("CSC Tight Halo filter", mbPar["cscHalo_cut"]);
-    set("EE Bad SC filter", mbPar["eesc_cut"]); 
-    set("Ecal Dead TP", mbPar["ecalTP_cut"]); 
-    set("Good Vtx", mbPar["goodVtx_cut"]); 
-    set("Bad Muon", mbPar["badMuon_cut"]);
-    set("Bad Charged Hadron", mbPar["badChargedHadron_cut"]);
+//     set("HBHE noise and scraping filter", mbPar["hbhe_cut"]);
+//     set("HBHE Iso noise filter", mbPar["hbheiso_cut"]); 
+//     set("CSC Tight Halo filter", mbPar["cscHalo_cut"]);
+//     set("EE Bad SC filter", mbPar["eesc_cut"]); 
+//     set("Ecal Dead TP", mbPar["ecalTP_cut"]); 
+//     set("Good Vtx", mbPar["goodVtx_cut"]); 
+//     set("Bad Muon", mbPar["badMuon_cut"]);
+//     set("Bad Charged Hadron", mbPar["badChargedHadron_cut"]);
 
     if (mbPar["muon_cuts"]){
         set("Min muon", miPar["min_muon"]);
