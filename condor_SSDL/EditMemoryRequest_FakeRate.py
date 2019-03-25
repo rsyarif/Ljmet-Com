@@ -9,8 +9,8 @@ import sys
 #path = '/uscms_data/d3/rsyarif/Brown2018/TT_BB_SSDL_LJMet_2017data/LJMet94x_2lepTT_2017datasets_2019_1_13_rizki/'
 #path = '/uscms_data/d3/rsyarif/Brown2018/TT_BB_SSDL_LJMet_2017data/LJMet94x_2lepTT_2017datasets_2019_2_1_rizki/'
 #path = '/uscms_data/d3/rsyarif/Brown2018/TT_BB_SSDL_LJMet_2017data/LJMet94x_2lepTT_2017datasets_2019_2_5_rizki/'
-#path = '/uscms_data/d3/rsyarif/Brown2018/TT_BB_SSDL_LJMet_2017data/LJMet94x_2lepTT_2017datasets_FakeRate_2019_3_15_rizki/'
-path = '/uscms_data/d3/rsyarif/Brown2018/TT_BB_SSDL_LJMet_2017data/LJMet94x_2lepTT_2017datasets_2019_3_15_rizki/'
+path = '/uscms_data/d3/rsyarif/Brown2018/TT_BB_SSDL_LJMet_2017data/LJMet94x_2lepTT_2017datasets_FakeRate_2019_3_15_rizki/'
+#path = '/uscms_data/d3/rsyarif/Brown2018/TT_BB_SSDL_LJMet_2017data/LJMet94x_2lepTT_2017datasets_2019_3_15_rizki/'
 
 
 samples = [x for x in os.walk(path).next()[1]]

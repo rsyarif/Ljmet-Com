@@ -10,8 +10,8 @@ rel_base = os.environ['CMSSW_BASE']
 cmssw = 'CMSSW_9_4_12'
 # folder  = 'LJMet94x_2lepTT_2017datasets_2018_11_18_rizki'
 # folder	= 'LJMet94x_2lepTT_2017datasets_FakeRate_2019_1_8_rizki'
-folder	= 'LJMet94x_2lepTT_2017datasets_2019_3_15_rizki'
-# folder	= 'LJMet94x_2lepTT_2017datasets_FakeRate_2019_3_15_rizki'
+# folder	= 'LJMet94x_2lepTT_2017datasets_2019_3_15_rizki'
+folder	= 'LJMet94x_2lepTT_2017datasets_FakeRate_2019_3_15_rizki'
 
 
 locdir = 'hadd_jobs_'+folder
@@ -26,59 +26,16 @@ eosdir = '/store/group/lpcljm/'+folder+'_hadds/'
 
 samples = [
 
-    #TODO: Mar 25, 2019
-#    'DoubleEG_RRB',
-#    'DoubleMuon_RRD',
-#   'BprimeBprime_M-1200',
-
+    'DoubleEG_RRB',
     'DoubleEG_RRC',
     'DoubleEG_RRD',
     'DoubleEG_RRE',
     'DoubleEG_RRF',
-    'MuonEG_RRB',
-    'MuonEG_RRC',
-    'MuonEG_RRD',
-    'MuonEG_RRE',
-    'MuonEG_RRF',
     'DoubleMuon_RRB',
     'DoubleMuon_RRC',
+    'DoubleMuon_RRD',
     'DoubleMuon_RRE',
     'DoubleMuon_RRF', #(missing 548)
-
-   'TTW',
-   'TTZ',
-   'TTH',
-   'TTTT',
-
-   'WWW',
-   'WWZ',
-   'WZZ',
-   'ZZZ',
-
-   'WpWp',
-   'WZ',
-#    'ZZ',
-   'ZZ_part1',
-   'ZZ_part2',
-
-  'TprimeTprime_M-1000',
-  'TprimeTprime_M-1100',
-  'TprimeTprime_M-1200',
-  'TprimeTprime_M-1300',
-  'TprimeTprime_M-1400',
-  'TprimeTprime_M-1500',
-  'TprimeTprime_M-1600',
-  'TprimeTprime_M-1700',
-  'TprimeTprime_M-1800',
-
-  'BprimeBprime_M-1000',
-  'BprimeBprime_M-1100',
-  'BprimeBprime_M-1300',
-  'BprimeBprime_M-1400',
-  'BprimeBprime_M-1500',
-  'BprimeBprime_M-1600',
-#  'BprimeBprime_M-1700',
-  'BprimeBprime_M-1800',
 
 ]
 

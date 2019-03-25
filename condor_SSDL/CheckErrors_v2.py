@@ -31,6 +31,57 @@ rootdir = rootdir.replace('_logs','')
 print 'checking ROOT files in:',rootdir
 folders = [x for x in os.walk(dir).next()[1]]
 
+def checkLogFile(dir,folder,file):
+
+	current = open(dir + '/'+folder+'/'+file.replace('.py','.condor.log'),'r')
+
+	sysrem = False
+	overmem = False
+	killed = False
+	normterm = False
+
+	sysrem_index = 0
+	overmem_index = 0
+	kill_index = 0
+	normterm_index = 0
+
+	iline = 0
+	for line in current:
+		if 'SYSTEM_PERIODIC_REMOVE' in line: 
+			if 'memory' in line:
+				overmem = True
+				overmem_index = iline
+			else:
+				sysrem = True
+				sysrem_index = iline						
+		elif 'condor_rm' in line: 
+			killed = True
+			kill_index = iline
+		elif 'Normal termination (return value 0)' in line: 
+			normterm = True
+			normterm_index = iline
+		iline += 1
+	
+	loginfo={}
+	loginfo['sysrem']={}
+	loginfo['overmem']={}
+	loginfo['killed']={}
+	loginfo['normterm']={}
+
+	loginfo['sysrem']['flag']=sysrem
+	loginfo['sysrem']['index']=sysrem_index
+
+	loginfo['overmem']['flag']=overmem
+	loginfo['overmem']['index']=overmem_index
+
+	loginfo['killed']['flag']=killed
+	loginfo['killed']['index']=kill_index
+
+	loginfo['normterm']['flag']=normterm
+	loginfo['normterm']['index']=normterm_index
+	
+	return loginfo
+
 total_total = 0
 total_succeeded = 0
 total_error = 0
@@ -41,6 +92,7 @@ no_log = 0
 empty_log = 0
 err_fail = 0
 copy_fail = 0
+sysrem_fail = 0
 mem_fail = 0 ; mem_fail_dict = {}
 kill_fail = 0
 All_cuts = 0
@@ -50,7 +102,7 @@ root_not_found = {}
 for folder in folders:
 	if 'DY' in folder: continue
 # 	if 'MuonEG_RRC' not in folder: continue
-	if 'ZZ' not in folder: continue
+#	if 'ZZ' not in folder: continue
 # 	if 'Mu' not in folder and 'EG' not in folder: continue
 	if verbose_level > 0:  
 		print
@@ -84,42 +136,36 @@ for folder in folders:
 
 			#Check why does it not have stdout?
 			try:
-				current = open(dir + '/'+folder+'/'+file.replace('.py','.condor.log'),'r')
-				overmem = False
-				killed = False
-				term = False
-				iline = 0
-				overmem_index = 0
-				kill_index = 0
-				term_index = 0
-				for line in current:
-					if 'SYSTEM_PERIODIC_REMOVE' in line: 
-										overmem = True
-										overmem_index = iline
-					elif 'condor_rm' in line: 
-						killed = True
-						kill_index = iline
-					elif 'Normal termination (return value 0)' in line: 
-						term = True
-						term_index = iline
-					iline += 1
-				if overmem and overmem_index > term_index: 
+					
+				#check log
+				loginfo = checkLogFile(dir,folder,file)
+										
+				if loginfo['sysrem']['flag'] and loginfo['sysrem']['index'] > loginfo['normterm']['index']: 
+					if verbose_level > 0: 
+						print '\t\tSYSTEM REMOVE FAIL:',file.replace('.py','.condor.log'),' and JobIndex:',index
+					sysrem_fail+=1
+					if resub_num == -1 or resub_num == 5:resub_index.append(index)
+					continue
+
+				if loginfo['overmem']['flag'] and loginfo['overmem']['index'] > loginfo['normterm']['index']: 
 					if verbose_level > 0: 
 						print '\t\tMEM FAIL:',file.replace('.py','.condor.log'),' and JobIndex:',index
 					mem_fail+=1
 					if resub_num == -1 or resub_num == 3:resub_index.append(index)
 					mem_fail_dict[folder].append(index)
 					continue
-				if killed and kill_index > term_index: 
+
+				if loginfo['killed']['flag'] and loginfo['killed']['index'] > loginfo['normterm']['index']: 
 					if verbose_level > 0: 
 						print '\t\tKILL_FAIL:',file.replace('.py','.condor.log'),' and JobIndex:',index
 					kill_fail+=1
 					if resub_num == -1 or resub_num == 4:resub_index.append(index)
 					continue
+
 			except:
 				pass
 			
-
+		#if stdout exists
 		else:
 			current = open(dir + '/'+folder+'/'+file.replace('.py','.stdout'),'r')
 			good = False
@@ -127,27 +173,59 @@ for folder in folders:
 				if 'All cuts' in line: 
 					good = True
 					All_cuts +=1
-					
-					#check if root file exists:
-					if file.replace('.py','.root') not in rootfiles:
-						print "\tROOT file does not exist for JobIndex:", index,'!!'
-						root_not_found[folder].append(index)
+					break
+				
+			#check if 'All cuts' exists
+			if good:
+				#check if root file exists:
+				if file.replace('.py','.root') not in rootfiles:
+					print "\tROOT file does not exist for JobIndex:", index,'!!'
+					root_not_found[folder].append(index)
 
-						#check why doesn't root file exist?
-						stderr_ = open(dir + '/'+folder+'/'+file.replace('.py','.stderr'),'r')
-						for l in stderr_:
-							if 'Error' in l:
-								if verbose_level > 0: 
-									print '\t\t"Error" in STDERR:',file.replace('.py','.stderr'),' and JobIndex:',index
-								err_fail+=1
-								break
-						stderr_.close()
+					#check why doesn't root file exist?
+					stderr_ = open(dir + '/'+folder+'/'+file.replace('.py','.stderr'),'r')
+					for l in stderr_:
+						if 'Error' in l or 'error' in l or 'ERROR' in l:
+							if verbose_level > 0: 
+								print '\t\t"Error" in STDERR:',file.replace('.py','.stderr'),' and JobIndex:',index
+							err_fail+=1
+							break
+					stderr_.close()
 
-						if resub_num == -1 or resub_num == 0:resub_index.append(index)
+					if resub_num == -1 or resub_num == 0:resub_index.append(index)
+
+				#check if log is good :
+				try:
+					loginfo = checkLogFile(dir,folder,file)
+										
+					if loginfo['sysrem']['flag'] and loginfo['sysrem']['index'] > loginfo['normterm']['index']: 
+						if verbose_level > 0: 
+							print '\tSYSTEM REMOVE FAIL:',file.replace('.py','.condor.log'),' and JobIndex:',index
+						sysrem_fail+=1
+						if resub_num == -1 or resub_num == 5:resub_index.append(index)
+						continue
+
+					if loginfo['overmem']['flag'] and loginfo['overmem']['index'] > loginfo['normterm']['index']: 
+						if verbose_level > 0: 
+							print '\tMEM FAIL:',file.replace('.py','.condor.log'),' and JobIndex:',index
+						mem_fail+=1
+						if resub_num == -1 or resub_num == 3:resub_index.append(index)
+						mem_fail_dict[folder].append(index)
+						continue
+
+					if loginfo['killed']['flag'] and loginfo['killed']['index'] > loginfo['normterm']['index']: 
+						if verbose_level > 0: 
+							print '\tKILL_FAIL:',file.replace('.py','.condor.log'),' and JobIndex:',index
+						kill_fail+=1
+						if resub_num == -1 or resub_num == 4:resub_index.append(index)
+						continue
+				except:
+					print "problem getting condor.log file."
+					pass
 						
 
 			#Check why does it not have "All Cuts" in stdout?
-			if not good: 
+			else: 
 				if verbose_level > 0: 
 					print '\tNO "All Cuts" in STDOUT:',file.replace('.py','.stdout'),' and JobIndex:',index
 					empty_log+=1
